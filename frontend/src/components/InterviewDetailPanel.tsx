@@ -71,6 +71,10 @@ interface BackendActionItem {
   description?: string;
   reason?: string;
   focus?: string;
+  question?: string;
+  passCriteria?: string;
+  priority?: string;
+  level?: string;
 }
 
 const EMPTY_LIST: never[] = [];
@@ -468,7 +472,7 @@ function RetestFocusSection({ focusItems }: { focusItems: RetestFocus[] }) {
                     {item.priority === 'high' ? '高优先级' : '中优先级'}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">{item.detail}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed whitespace-pre-line">{item.detail}</p>
               </div>
               <ArrowRight className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
             </div>
@@ -889,9 +893,13 @@ function normalizeRetestFocus(item: unknown): RetestFocus | null {
   }
 
   if (!isRecord(item)) return null;
-  const raw = item as BackendActionItem & { priority?: string; level?: string };
+  const raw = item as BackendActionItem;
   const title = firstNonEmptyString(raw.title, raw.label, raw.focus, raw.task) ?? '下轮复测重点';
-  const detail = firstNonEmptyString(raw.detail, raw.description, raw.reason, raw.focus, raw.action, raw.task);
+  const structuredQuestion = firstNonEmptyString(raw.question);
+  const structuredPassCriteria = firstNonEmptyString(raw.passCriteria);
+  const detail = structuredQuestion && structuredPassCriteria
+    ? `复测问题：${structuredQuestion}\n通过标准：${structuredPassCriteria}`
+    : firstNonEmptyString(raw.detail, raw.description, raw.reason, raw.focus, raw.action, raw.task);
 
   if (!detail) return null;
 

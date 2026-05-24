@@ -77,7 +77,11 @@ public class InterviewSessionEntity {
     // 参考答案 (JSON)
     @Column(columnDefinition = "TEXT")
     private String referenceAnswersJson;
-    
+
+    // 下轮复测重点 (JSON)
+    @Column(columnDefinition = "TEXT")
+    private String nextRoundFocusJson;
+
     // 面试答案记录
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewAnswerEntity> answers = new ArrayList<>();
@@ -210,11 +214,19 @@ public class InterviewSessionEntity {
     public String getReferenceAnswersJson() {
         return referenceAnswersJson;
     }
-    
+
     public void setReferenceAnswersJson(String referenceAnswersJson) {
         this.referenceAnswersJson = referenceAnswersJson;
     }
-    
+
+    public String getNextRoundFocusJson() {
+        return nextRoundFocusJson;
+    }
+
+    public void setNextRoundFocusJson(String nextRoundFocusJson) {
+        this.nextRoundFocusJson = nextRoundFocusJson;
+    }
+
     public List<InterviewAnswerEntity> getAnswers() {
         return answers;
     }

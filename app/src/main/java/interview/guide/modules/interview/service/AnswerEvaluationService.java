@@ -92,6 +92,14 @@ public class AnswerEvaluationService {
             report.referenceAnswers().stream()
                 .map(ra -> new ReferenceAnswer(ra.questionIndex(), ra.question(),
                     ra.referenceAnswer(), ra.keyPoints()))
+                .toList(),
+            report.nextRoundFocus().stream()
+                .map(item -> new InterviewReportDTO.RetestFocusItem(
+                    item.title(),
+                    item.question(),
+                    item.passCriteria(),
+                    item.priority()
+                ))
                 .toList()
         );
     }

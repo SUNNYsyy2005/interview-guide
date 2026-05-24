@@ -37,6 +37,13 @@ export interface AnalysisItem {
   suggestions: unknown[];
 }
 
+export interface RetestFocusItem {
+  title: string;
+  question: string;
+  passCriteria: string;
+  priority: 'high' | 'medium';
+}
+
 export interface InterviewItem {
   id: number;
   sessionId: string;
@@ -52,6 +59,7 @@ export interface InterviewItem {
   strengths?: string[];
   improvements?: string[];
   referenceAnswers?: unknown[];
+  nextRoundFocus?: RetestFocusItem[];
 }
 
 export interface AnswerItem {

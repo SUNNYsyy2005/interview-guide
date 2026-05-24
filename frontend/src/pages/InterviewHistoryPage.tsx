@@ -580,7 +580,7 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
                             <RotateCcw className="w-4 h-4" />
                           </button>
                         )}
-                        {(isEvaluateFailed(item) || (isCompletedStatus(item.status) && !isEvaluateCompleted(item) && !isEvaluating(item))) && (
+                        {(isEvaluateFailed(item) || isEvaluating(item) || (isCompletedStatus(item.status) && !isEvaluateCompleted(item))) && (
                           <button
                             onClick={(e) => handleReEvaluate(item.sessionId, e)}
                             disabled={reEvaluatingId === item.sessionId}

@@ -74,6 +74,7 @@ public interface InterviewMapper {
     @Mapping(target = "strengths", source = "strengths")
     @Mapping(target = "improvements", source = "improvements")
     @Mapping(target = "referenceAnswers", source = "referenceAnswers")
+    @Mapping(target = "nextRoundFocus", source = "nextRoundFocus")
     @Mapping(target = "answers", source = "answers")
     InterviewDetailDTO toDetailDTO(
         InterviewSessionEntity session,
@@ -81,6 +82,7 @@ public interface InterviewMapper {
         List<String> strengths,
         List<String> improvements,
         List<Object> referenceAnswers,
+        List<InterviewReportDTO.RetestFocusItem> nextRoundFocus,
         List<InterviewDetailDTO.AnswerDetailDTO> answers
     );
 

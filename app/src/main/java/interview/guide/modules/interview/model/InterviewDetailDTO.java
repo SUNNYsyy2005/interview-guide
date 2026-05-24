@@ -21,6 +21,7 @@ public record InterviewDetailDTO(
     List<String> strengths,
     List<String> improvements,
     List<Object> referenceAnswers,
+    List<InterviewReportDTO.RetestFocusItem> nextRoundFocus,
     List<AnswerDetailDTO> answers
 ) {
     /**
