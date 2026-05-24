@@ -86,7 +86,7 @@ export default function Layout() {
       title: '保研面试准备',
       items: [
         { id: 'resumes', path: '/history', label: '简历管理', icon: FileStack, description: '管理简历，AI 分析' },
-        { id: 'interview-hub', path: '/interview-hub', label: '模拟面试', icon: Sparkles, description: '文字/语音面试练习' },
+        { id: 'interview-hub', path: '/interview-hub', label: '模拟面试', icon: Sparkles, description: 'AI 面试诊断练习' },
         { id: 'interviews', path: '/interviews', label: '面试记录', icon: Users, description: '查看面试历史' },
       ],
     },

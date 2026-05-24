@@ -183,7 +183,6 @@ export default function Interview({
     setIsSubmitting(true);
 
     const submittedAnswer = answer.trim();
-    const currentCursor = clampQuestionCursor(session.questions.length, session.currentQuestionIndex);
 
     const userMessage: Message = {
       type: 'user',

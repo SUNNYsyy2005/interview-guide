@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  X, Sparkles, FileText, Mic,
+  X, Sparkles, FileText,
   FileStack, ChevronDown, ChevronUp, Loader2
 } from 'lucide-react';
 import { useInterviewConfig, CUSTOM_SKILL_ID, DIFFICULTY_OPTIONS, type InterviewMode, type Difficulty } from '../hooks/useInterviewConfig';
@@ -60,7 +60,7 @@ export default function UnifiedInterviewModal({
   onStart,
   defaultMode = 'text',
   defaultResumeId,
-  hideModeSwitch = false,
+  hideModeSwitch: _hideModeSwitch = false,
   title = '开始模拟面试',
   subtitle = '选择面试模式和主题，快速开始',
   startButtonText = '开始面试',
