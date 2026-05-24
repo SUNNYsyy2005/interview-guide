@@ -1,0 +1,35 @@
+displayName: AI 应用与创业
+display:
+  icon: 🚀
+  gradient: from-amber-500 to-orange-500
+  iconBg: bg-amber-100 dark:bg-amber-900/30
+  iconColor: text-amber-600 dark:text-amber-400
+categories:
+  - key: AI_PRODUCT
+    label: AI 产品设计/需求分析
+    priority: CORE
+    ref: ai-application.md
+    shared: true
+  - key: AI_ENGINEERING
+    label: AI 工程化落地
+    priority: CORE
+    ref: ai-application.md
+    shared: true
+  - key: LLM_APPLICATION
+    label: LLM 应用开发
+    priority: CORE
+    ref: ai-application.md
+    shared: true
+  - key: DATA_ENGINEERING
+    label: 数据工程/标注/评估
+    priority: NORMAL
+    ref: ai-application.md
+    shared: true
+  - key: BUSINESS_MODEL
+    label: 商业模式/创业思维
+    priority: NORMAL
+    ref: ai-application.md
+    shared: true
+  - key: RESEARCH_PROJECT
+    label: 科研/项目经历
+    priority: ALWAYS_ONE

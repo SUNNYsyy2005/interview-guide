@@ -1,0 +1,35 @@
+displayName: 大语言模型与AI应用
+display:
+  icon: 🤖
+  gradient: from-blue-500 to-cyan-500
+  iconBg: bg-blue-100 dark:bg-blue-900/30
+  iconColor: text-blue-600 dark:text-blue-400
+categories:
+  - key: LLM_FUNDAMENTALS
+    label: LLM 基础原理
+    priority: CORE
+    ref: llm-fundamentals.md
+    shared: true
+  - key: PROMPT_AGENT
+    label: Prompt/Agent/RAG
+    priority: CORE
+    ref: llm-fundamentals.md
+    shared: true
+  - key: FINE_TUNING
+    label: 微调/训练优化
+    priority: CORE
+    ref: llm-fundamentals.md
+    shared: true
+  - key: EVALUATION_SAFETY
+    label: 评估/安全/对齐
+    priority: NORMAL
+    ref: llm-fundamentals.md
+    shared: true
+  - key: ENGINEERING_PRACTICE
+    label: 工程落地/推理优化
+    priority: NORMAL
+    ref: llm-fundamentals.md
+    shared: true
+  - key: RESEARCH_PROJECT
+    label: 科研/项目经历
+    priority: ALWAYS_ONE

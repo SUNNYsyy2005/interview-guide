@@ -1,0 +1,35 @@
+displayName: 机器人与具身智能
+display:
+  icon: 🦾
+  gradient: from-red-500 to-rose-500
+  iconBg: bg-red-100 dark:bg-red-900/30
+  iconColor: text-red-600 dark:text-red-400
+categories:
+  - key: ROBOTICS_FUNDAMENTALS
+    label: 机器人学基础
+    priority: CORE
+    ref: robotics-embodied.md
+    shared: true
+  - key: EMBODIED_AI
+    label: 具身智能/感知决策
+    priority: CORE
+    ref: robotics-embodied.md
+    shared: true
+  - key: SLAM_NAVIGATION
+    label: SLAM/导航规划
+    priority: CORE
+    ref: robotics-embodied.md
+    shared: true
+  - key: MANIPULATION_CONTROL
+    label: 操作/控制/仿真
+    priority: NORMAL
+    ref: robotics-embodied.md
+    shared: true
+  - key: RL_MULTIAGENT
+    label: 强化学习/多智能体
+    priority: NORMAL
+    ref: robotics-embodied.md
+    shared: true
+  - key: RESEARCH_PROJECT
+    label: 科研/项目经历
+    priority: ALWAYS_ONE

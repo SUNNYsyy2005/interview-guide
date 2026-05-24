@@ -1,0 +1,35 @@
+displayName: 机器学习与深度学习
+display:
+  icon: 🧠
+  gradient: from-violet-500 to-purple-600
+  iconBg: bg-violet-100 dark:bg-violet-900/30
+  iconColor: text-violet-600 dark:text-violet-400
+categories:
+  - key: ML_BASICS
+    label: 机器学习基础
+    priority: CORE
+    ref: ml-basics.md
+    shared: true
+  - key: DEEP_LEARNING
+    label: 深度学习
+    priority: CORE
+    ref: deep-learning.md
+    shared: true
+  - key: MATH_STATS
+    label: 数学/概率统计
+    priority: CORE
+    ref: ml-basics.md
+    shared: true
+  - key: MODEL_OPTIMIZATION
+    label: 模型调优/训练技巧
+    priority: NORMAL
+    ref: deep-learning.md
+    shared: true
+  - key: EXPERIMENT_DESIGN
+    label: 实验设计与评估
+    priority: NORMAL
+    ref: ml-basics.md
+    shared: true
+  - key: RESEARCH_PROJECT
+    label: 科研/项目经历
+    priority: ALWAYS_ONE

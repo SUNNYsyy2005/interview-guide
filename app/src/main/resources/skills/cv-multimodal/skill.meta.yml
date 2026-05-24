@@ -1,0 +1,35 @@
+displayName: 计算机视觉与多模态
+display:
+  icon: 👁️
+  gradient: from-orange-500 to-red-500
+  iconBg: bg-orange-100 dark:bg-orange-900/30
+  iconColor: text-orange-600 dark:text-orange-400
+categories:
+  - key: CV_FUNDAMENTALS
+    label: CV 基础
+    priority: CORE
+    ref: cv-multimodal.md
+    shared: true
+  - key: DETECTION_SEGMENTATION
+    label: 目标检测/分割
+    priority: CORE
+    ref: cv-multimodal.md
+    shared: true
+  - key: MULTIMODAL
+    label: 多模态/跨模态
+    priority: CORE
+    ref: cv-multimodal.md
+    shared: true
+  - key: GENERATIVE_MODEL
+    label: 生成模型
+    priority: NORMAL
+    ref: cv-multimodal.md
+    shared: true
+  - key: VIDEO_3D
+    label: 视频/3D 视觉
+    priority: NORMAL
+    ref: cv-multimodal.md
+    shared: true
+  - key: RESEARCH_PROJECT
+    label: 科研/项目经历
+    priority: ALWAYS_ONE
