@@ -173,7 +173,7 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
   const [stats, setStats] = useState<InterviewStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<InterviewType>('all');
+  const [typeFilter] = useState<InterviewType>('all');
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [deleteItem, setDeleteItem] = useState<UnifiedInterviewItem | null>(null);
   const [exporting, setExporting] = useState<string | null>(null);
@@ -410,25 +410,7 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
       )}
 
       {/* Type filter tabs */}
-      <div className="flex items-center gap-2 mb-6">
-        {([
-          { key: 'all', label: '全部' },
-          { key: 'text', label: '文字面试' },
-          { key: 'voice', label: '语音面试' },
-        ] as const).map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setTypeFilter(tab.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              typeFilter === tab.key
-                ? 'bg-primary-500 text-white'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* 面试记录列表 */}
 
       {/* Loading */}
       {loading && (

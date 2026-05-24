@@ -14,6 +14,8 @@ interface Message {
   content: string;
   category?: string;
   questionIndex?: number;
+  displayOrder?: number;
+  isFollowUp?: boolean;
 }
 
 interface InterviewProps {
@@ -56,6 +58,28 @@ export default function Interview({
   const difficulty = initialConfig?.difficulty ?? 'mid';
   const customCategories = initialConfig?.customCategories;
   const jdText = initialConfig?.jdText;
+
+  const clampQuestionCursor = (questionCountValue: number, cursor: number) => {
+    if (questionCountValue <= 0) return 0;
+    return Math.min(Math.max(cursor, 0), questionCountValue - 1);
+  };
+
+  const isFollowUpQuestion = (question: InterviewQuestion, displayOrder: number) => {
+    if (!question.type) {
+      return question.questionIndex !== displayOrder;
+    }
+
+    return /follow/i.test(question.type) || question.questionIndex !== displayOrder;
+  };
+
+  const toInterviewerMessage = (question: InterviewQuestion, displayOrder: number): Message => ({
+    type: 'interviewer',
+    content: question.question,
+    category: question.category,
+    questionIndex: question.questionIndex,
+    displayOrder,
+    isFollowUp: isFollowUpQuestion(question, displayOrder),
+  });
 
   // 自动开始面试（恢复已有会话 或 创建新会话）
   useEffect(() => {
@@ -105,7 +129,11 @@ export default function Interview({
       initSession(existingSession);
 
       // 恢复已填写的答案
-      const currentQ = existingSession.questions[existingSession.currentQuestionIndex];
+      const currentCursor = clampQuestionCursor(
+        existingSession.questions.length,
+        existingSession.currentQuestionIndex,
+      );
+      const currentQ = existingSession.questions[currentCursor];
       if (currentQ?.userAnswer) {
         setAnswer(currentQ.userAnswer);
       }
@@ -118,32 +146,35 @@ export default function Interview({
   };
 
   const initSession = (s: InterviewSession) => {
-    setSession(s);
+    const nextSession = {
+      ...s,
+      currentQuestionIndex: clampQuestionCursor(s.questions.length, s.currentQuestionIndex),
+    };
+    setSession(nextSession);
 
-    if (s.questions.length > 0) {
-      const idx = Math.min(s.currentQuestionIndex, s.questions.length - 1);
-      const currentQ = s.questions[idx];
+    if (nextSession.questions.length > 0) {
+      const cursor = nextSession.currentQuestionIndex;
+      const currentQ = nextSession.questions[cursor];
       setCurrentQuestion(currentQ);
 
       // 重建消息历史
       const restoredMessages: Message[] = [];
-      for (let i = 0; i <= idx; i++) {
-        const q = s.questions[i];
-        restoredMessages.push({
-          type: 'interviewer',
-          content: q.question,
-          category: q.category,
-          questionIndex: i
-        });
+      for (let i = 0; i <= cursor; i++) {
+        const q = nextSession.questions[i];
+        restoredMessages.push(toInterviewerMessage(q, i));
         if (q.userAnswer) {
           restoredMessages.push({
             type: 'user',
-            content: q.userAnswer
+            content: q.userAnswer,
           });
         }
       }
       setMessages(restoredMessages);
+      return;
     }
+
+    setCurrentQuestion(null);
+    setMessages([]);
   };
 
   const handleSubmitAnswer = async () => {
@@ -151,30 +182,80 @@ export default function Interview({
 
     setIsSubmitting(true);
 
+    const submittedAnswer = answer.trim();
+    const currentCursor = clampQuestionCursor(session.questions.length, session.currentQuestionIndex);
+
     const userMessage: Message = {
       type: 'user',
-      content: answer
+      content: submittedAnswer,
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
 
     try {
       const response = await interviewApi.submitAnswer({
         sessionId: session.sessionId,
         questionIndex: currentQuestion.questionIndex,
-        answer: answer.trim()
+        answer: submittedAnswer,
       });
 
       setAnswer('');
 
       if (response.hasNextQuestion && response.nextQuestion) {
-        setCurrentQuestion(response.nextQuestion);
-        setMessages(prev => [...prev, {
-          type: 'interviewer',
-          content: response.nextQuestion!.question,
-          category: response.nextQuestion!.category,
-          questionIndex: response.nextQuestion!.questionIndex
-        }]);
+        const nextCursor = clampQuestionCursor(response.totalQuestions, response.currentIndex);
+        const nextQuestion = response.nextQuestion;
+
+        setSession((prev) => {
+          if (!prev) return prev;
+
+          const nextQuestions = [...prev.questions];
+          const existingQuestionIndex = nextQuestions.findIndex(
+            (question) => question.questionIndex === nextQuestion.questionIndex,
+          );
+
+          if (existingQuestionIndex >= 0) {
+            nextQuestions[existingQuestionIndex] = nextQuestion;
+          } else if (nextCursor >= nextQuestions.length) {
+            nextQuestions.push(nextQuestion);
+          } else {
+            nextQuestions.splice(nextCursor, 0, nextQuestion);
+          }
+
+          if (currentCursor < nextQuestions.length) {
+            nextQuestions[currentCursor] = {
+              ...nextQuestions[currentCursor],
+              userAnswer: submittedAnswer,
+            };
+          }
+
+          return {
+            ...prev,
+            questions: nextQuestions,
+            currentQuestionIndex: nextCursor,
+            totalQuestions: response.totalQuestions,
+          };
+        });
+
+        setCurrentQuestion(nextQuestion);
+        setMessages((prev) => [...prev, toInterviewerMessage(nextQuestion, nextCursor)]);
       } else {
+        setSession((prev) => {
+          if (!prev) return prev;
+
+          const nextQuestions = [...prev.questions];
+          if (currentCursor < nextQuestions.length) {
+            nextQuestions[currentCursor] = {
+              ...nextQuestions[currentCursor],
+              userAnswer: submittedAnswer,
+            };
+          }
+
+          return {
+            ...prev,
+            questions: nextQuestions,
+            totalQuestions: response.totalQuestions,
+            currentQuestionIndex: clampQuestionCursor(response.totalQuestions, response.currentIndex),
+          };
+        });
         onInterviewComplete();
       }
     } catch (err) {

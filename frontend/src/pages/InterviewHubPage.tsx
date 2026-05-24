@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ChevronDown, ChevronUp, FileStack, FileText, Loader2, Mic,
+  ChevronDown, ChevronUp, FileStack, FileText, Loader2,
   RefreshCw, Sparkles,
 } from 'lucide-react';
 import { type SkillDTO } from '../api/skill';
 import { interviewApi, type TextSessionMeta } from '../api/interview';
-import { voiceInterviewApi, type SessionMeta } from '../api/voiceInterview';
+
 import { getSkillIcon } from '../utils/skillIcons';
 import { getTemplateName } from '../utils/voiceInterview';
 import { getScoreTextColor } from '../utils/score';
@@ -35,13 +35,13 @@ AIIC的资源网络覆盖：上市科技企业创始人、CEO，顶级VC管理�
 简历发送邮箱：mlic@pku.edu.cn`;
 interface RecentInterviewItem {
   id: string;
-  type: 'text' | 'voice';
+  type: 'text';
   title: string;
   status: string;
   evaluateStatus?: string | null;
   overallScore: number | null;
   createdAt: string;
-  voiceSessionId?: number;
+
 }
 
 export default function InterviewHubPage() {
@@ -56,10 +56,7 @@ export default function InterviewHubPage() {
   const loadRecentInterviews = useCallback(async (allSkills: SkillDTO[]) => {
     setLoadingRecent(true);
     try {
-      const [textSessions, voiceSessions] = await Promise.all([
-        interviewApi.listSessions().catch(() => [] as TextSessionMeta[]),
-        voiceInterviewApi.getAllSessions().catch(() => [] as SessionMeta[]),
-      ]);
+      const textSessions = await interviewApi.listSessions().catch(() => [] as TextSessionMeta[]);
 
       const items: RecentInterviewItem[] = [
         ...textSessions.map(s => ({
@@ -71,15 +68,7 @@ export default function InterviewHubPage() {
           overallScore: s.overallScore,
           createdAt: s.createdAt,
         })),
-        ...voiceSessions.map(s => ({
-          id: `voice-${s.sessionId}`,
-          type: 'voice' as const,
-          title: s.roleType || '语音面试',
-          status: s.status,
-          overallScore: null,
-          createdAt: s.createdAt,
-          voiceSessionId: s.sessionId,
-        })),
+
       ];
 
       items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -109,8 +98,7 @@ export default function InterviewHubPage() {
       return;
     }
 
-    if (config.mode === 'text') {
-      navigate('/interview', {
+    navigate('/interview', {
         state: {
           resumeId: config.resumeId,
           interviewConfig: {
@@ -123,24 +111,7 @@ export default function InterviewHubPage() {
             customCategories: config.isCustomSkill ? config.customCategories : undefined,
           },
         },
-      });
-    } else {
-      const params = new URLSearchParams({ skillId: config.skillId, difficulty: config.difficulty });
-      navigate(`/voice-interview?${params.toString()}`, {
-        state: {
-          voiceConfig: {
-            skillId: config.skillId,
-            difficulty: config.difficulty,
-            techEnabled: true,
-            projectEnabled: true,
-            hrEnabled: true,
-            plannedDuration: config.plannedDuration,
-            resumeId: config.resumeId,
-            llmProvider: config.llmProvider,
-          },
-        },
-      });
-    }
+    });
   };
 
   return (
@@ -427,31 +398,7 @@ export default function InterviewHubPage() {
                   </div>
                 )}
 
-                {/* 语音面试 - 时长 */}
-                {config.mode === 'voice' && (
-                  <div className="bg-slate-50/80 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-semibold text-sm text-slate-900 dark:text-white">计划面试时长</p>
-                      <div className="text-2xl font-bold tabular-nums text-primary-600 dark:text-primary-400">
-                        {config.plannedDuration}
-                        <span className="text-xs font-normal text-slate-400 ml-0.5">min</span>
-                      </div>
-                    </div>
-                    <input
-                      type="range"
-                      min="15"
-                      max="60"
-                      step="5"
-                      value={config.plannedDuration}
-                      onChange={e => config.setPlannedDuration(parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
-                        [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
-                        [&::-webkit-slider-thumb]:bg-primary-500 [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:shadow-primary-500/30"
-                    />
-                  </div>
-                )}
+
               </motion.div>
             )}
           </AnimatePresence>
@@ -504,35 +451,19 @@ export default function InterviewHubPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  onClick={() => {
-                    if (item.type === 'text') {
-                      navigate(`/interviews/${item.id}`);
-                    } else if (item.voiceSessionId) {
-                      navigate(`/voice-interview/${item.voiceSessionId}/evaluation`);
-                    }
-                  }}
+                  onClick={() => navigate(`/interviews/${item.id}`)}
                   className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group"
                 >
                   {/* 类型图标 */}
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    item.type === 'text'
-                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                      : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                  }`}>
-                    {item.type === 'text' ? <FileText className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                    <FileText className="w-5 h-5" />
                   </div>
 
                   {/* 信息 */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm text-slate-800 dark:text-white truncate">{item.title}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                        item.type === 'text'
-                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                          : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
-                      }`}>
-                        {item.type === 'text' ? '文字' : '语音'}
-                      </span>
+
                     </div>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-xs text-slate-400 dark:text-slate-500">
