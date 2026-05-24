@@ -140,7 +140,7 @@ app:
         supports-embedding: true
       # MiniMax (OpenAI 兼容)
       minimax:
-        base-url: ${PROVIDER_MINIMAX_BASE_URL:https://api.minimax.io/v1}
+        base-url: ${PROVIDER_MINIMAX_BASE_URL:https://api.minimax.chat/v1}
         api-key: ${PROVIDER_MINIMAX_API_KEY:}
         model: ${PROVIDER_MINIMAX_MODEL:MiniMax-M2.7}
         temperature: 1
