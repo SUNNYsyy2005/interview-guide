@@ -91,7 +91,7 @@ spring:
 # Application custom configuration
 app:
   ai:
-    default-provider: dashscope
+    default-provider: minimax
     default-embedding-provider: dashscope
     embedding-dimensions: ${APP_AI_EMBEDDING_DIMENSIONS:1024}
     security:
@@ -106,7 +106,7 @@ app:
     providers:
       dashscope:
         base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-        api-key: ${AI_BAILIAN_API_KEY}
+        api-key: ${AI_BAILIAN_API_KEY:}
         model: ${AI_MODEL:qwen3.5-flash}
         embedding-model: text-embedding-v3
         embedding-dimensions: 1024
@@ -138,6 +138,13 @@ app:
         embedding-model: embedding-3
         embedding-dimensions: 1024
         supports-embedding: true
+      # MiniMax (OpenAI 兼容)
+      minimax:
+        base-url: ${PROVIDER_MINIMAX_BASE_URL:https://api.minimax.io/v1}
+        api-key: ${PROVIDER_MINIMAX_API_KEY:}
+        model: ${PROVIDER_MINIMAX_MODEL:MiniMax-M2.7}
+        temperature: 1
+        supports-embedding: false
     advisors:
       enabled: ${APP_AI_ADVISORS_ENABLED:true}
       tool-call-enabled: ${APP_AI_ADVISORS_TOOL_CALL_ENABLED:true}
@@ -230,7 +237,7 @@ app:
       asr:
         url: wss://dashscope.aliyuncs.com/api-ws/v1/realtime
         model: qwen3-asr-flash-realtime
-        api-key: ${AI_BAILIAN_API_KEY}
+        api-key: ${AI_BAILIAN_API_KEY:}
         language: zh
         format: pcm
         sample-rate: 16000
@@ -244,7 +251,7 @@ app:
       # 音色列表文档：https://help.aliyun.com/zh/model-studio/qwen-tts-realtime
       tts:
         model: qwen3-tts-flash-realtime
-        api-key: ${AI_BAILIAN_API_KEY}
+        api-key: ${AI_BAILIAN_API_KEY:}
         voice: Cherry
         format: pcm
         sample-rate: 24000

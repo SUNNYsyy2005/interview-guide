@@ -24,7 +24,7 @@ services:
       # 初始化脚本：容器首次启动时会自动执行 /docker-entrypoint-initdb.d/ 下的 .sql 文件
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     # 健康检查：
     # 后端服务(app)需要等待数据库完全启动并准备好连接后才能启动。
     # 这里通过 pg_isready 命令检测数据库状态。
@@ -48,7 +48,7 @@ services:
     image: redis:7
     container_name: interview-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -78,8 +78,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -160,14 +160,18 @@ services:
       
       # === AI 模型配置 (必须配置) ===
       # 这里的变量值来自宿主机的环境变量或 .env 文件
-      AI_BAILIAN_API_KEY: ${AI_BAILIAN_API_KEY}
-      AI_MODEL: ${AI_MODEL:-qwen3.5-flash}
+      AI_BAILIAN_API_KEY: ${AI_BAILIAN_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-MiniMax-M2.7}
 
       # === 面试参数配置 ===
-      APP_INTERVIEW_FOLLOW_UP_COUNT: ${APP_INTERVIEW_FOLLOW_UP_COUNT:-1}
+      APP_INTERVIEW_FOLLOW_UP_COUNT: ${APP_INTERVIEW_FOLLOW_UP_COUNT:-3}
       APP_INTERVIEW_EVALUATION_BATCH_SIZE: ${APP_INTERVIEW_EVALUATION_BATCH_SIZE:-8}
+      # === MiniMax API ===
+      PROVIDER_MINIMAX_API_KEY: ${PROVIDER_MINIMAX_API_KEY}
+      PROVIDER_MINIMAX_BASE_URL: ${PROVIDER_MINIMAX_BASE_URL:-https://api.minimax.io/v1}
+      PROVIDER_MINIMAX_MODEL: ${PROVIDER_MINIMAX_MODEL:-MiniMax-M2.7}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
   # =========================================
   # 6. 前端应用服务 (Vue/React + Nginx)
