@@ -296,6 +296,31 @@ public class UnifiedEvaluationService {
             .map(String::trim).distinct().limit(8).toList();
     }
 
+    private List<RetestFocusItemDTO> sanitizeRetestFocus(List<RetestFocusItemDTO> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        Map<String, RetestFocusItemDTO> deduped = new LinkedHashMap<>();
+        for (RetestFocusItemDTO item : items) {
+            if (item == null || item.title() == null || item.title().isBlank()) {
+                continue;
+            }
+            String question = item.question() != null ? item.question().trim() : "";
+            String passCriteria = item.passCriteria() != null ? item.passCriteria().trim() : "";
+            if (question.isBlank() || passCriteria.isBlank()) {
+                continue;
+            }
+            String priority = "high".equalsIgnoreCase(item.priority()) ? "high" : "medium";
+            deduped.putIfAbsent(item.title().trim().toLowerCase(), new RetestFocusItemDTO(
+                item.title().trim(),
+                question,
+                passCriteria,
+                priority
+            ));
+        }
+        return deduped.values().stream().limit(3).toList();
+    }
+
     private EvaluationReport buildReport(String sessionId, List<QaRecord> qaRecords,
                                           List<QuestionEvalDTO> evaluations,
                                           String overallFeedback,
@@ -350,7 +375,15 @@ public class UnifiedEvaluationService {
             overallFeedback,
             strengths != null ? strengths : List.of(),
             improvements != null ? improvements : List.of(),
-            referenceAnswers
+            referenceAnswers,
+            nextRoundFocus == null ? List.of() : nextRoundFocus.stream()
+                .map(item -> new EvaluationReport.RetestFocusItem(
+                    item.title(),
+                    item.question(),
+                    item.passCriteria(),
+                    item.priority()
+                ))
+                .toList()
         );
     }
 
