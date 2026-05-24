@@ -113,3 +113,4 @@
 - 结论必须具体，避免"建议加强基础""还需提升表达"这类空话
 - 只能依据输入信息归纳，不要虚构申请者经历或补造细节
 - **输出中不得出现任何系统内部标签**（如 SLAM_NAVIGATION、DEEP_LEARNING、CV_FUNDAMENTALS 等 category key）
+- **JSON 格式硬性要求**：每个 JSON key 在同一对象中只能出现一次。strengths 必须合并为一个数组，improvements 必须合并为一个数组。绝对禁止输出多个同名 key（如两个 "strengths": [...]）。违反此规则会导致系统解析失败。
