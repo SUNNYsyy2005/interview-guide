@@ -126,7 +126,7 @@ public class EvaluateStreamConsumer extends AbstractStreamConsumer<EvaluateStrea
 
         // 获取 LLM 客户端
         String provider = session.getLlmProvider();
-        ChatClient chatClient = llmProviderRegistry.getChatClientOrDefault(provider);
+        ChatClient chatClient = llmProviderRegistry.getPlainChatClient(provider);
 
         String resumeText = session.getResume() != null ? session.getResume().getResumeText() : "";
         InterviewReportDTO report = evaluationService.evaluateInterview(chatClient, sessionId, resumeText, questions);

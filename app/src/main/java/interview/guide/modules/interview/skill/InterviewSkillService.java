@@ -205,7 +205,7 @@ public class InterviewSkillService {
 
         log.info("开始解析 JD，长度: {}", jdText.length());
 
-        ChatClient chatClient = llmProviderRegistry.getDefaultChatClient();
+        ChatClient chatClient = llmProviderRegistry.getPlainChatClient(null);
         String systemPrompt = jdSystemPromptTemplate.render(Map.of(
             "referenceFileList", cachedReferenceFileList
         )) + "\n\n" + jdOutputConverter.getFormat();

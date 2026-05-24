@@ -464,7 +464,7 @@ public class InterviewSessionService {
         if (entityOpt.isPresent()) {
             provider = entityOpt.get().getLlmProvider();
         }
-        ChatClient chatClient = llmProviderRegistry.getChatClientOrDefault(provider);
+        ChatClient chatClient = llmProviderRegistry.getPlainChatClient(provider);
 
         InterviewReportDTO report = evaluationService.evaluateInterview(
             chatClient,

@@ -111,11 +111,16 @@ public class StructuredOutputInvoker {
         String logContext,
         Logger log
     ) {
+        // 1. 先去除可能的 Markdown 代码块包裹
+        String cleaned = stripMarkdownCodeFences(content);
+
+        // 2. 直接尝试解析
         try {
-            return outputConverter.convert(content);
+            return outputConverter.convert(cleaned);
         } catch (Exception firstError) {
-            String repaired = repairUnescapedQuotesInJsonStrings(content);
-            if (!repaired.equals(content)) {
+            // 3. 尝试修复未转义引号后重新解析
+            String repaired = repairUnescapedQuotesInJsonStrings(cleaned);
+            if (!repaired.equals(cleaned)) {
                 try {
                     T result = outputConverter.convert(repaired);
                     log.warn("{}结构化 JSON 存在未转义引号，已在本地修复后解析成功", logContext);
@@ -124,8 +129,39 @@ public class StructuredOutputInvoker {
                     firstError.addSuppressed(repairError);
                 }
             }
+
+            // 4. 最后兜底：去掉所有换行后重试（有时 AI 返回的 JSON 包含真实换行符）
+            try {
+                String flattened = repaired.replace("\n", "\\n").replace("\r", "");
+                T result = outputConverter.convert(flattened);
+                log.warn("{}结构化 JSON 存在未转义换行符，已在本地修复后解析成功", logContext);
+                return result;
+            } catch (Exception e) {
+                // 忽略，抛出原始错误
+            }
+
             throw firstError;
         }
+    }
+
+    /**
+     * 去除 AI 输出中可能的 Markdown 代码块包裹
+     */
+    private String stripMarkdownCodeFences(String content) {
+        if (content == null) return null;
+        String trimmed = content.strip();
+        // 处理 ```json ... ``` 或 ``` ... ```
+        if (trimmed.startsWith("```")) {
+            int firstNewline = trimmed.indexOf('\n');
+            if (firstNewline > 0) {
+                trimmed = trimmed.substring(firstNewline + 1);
+            }
+            if (trimmed.endsWith("```")) {
+                trimmed = trimmed.substring(0, trimmed.length() - 3);
+            }
+            trimmed = trimmed.strip();
+        }
+        return trimmed;
     }
 
     private String repairUnescapedQuotesInJsonStrings(String content) {
@@ -175,7 +211,25 @@ public class StructuredOutputInvoker {
             if (Character.isWhitespace(next)) {
                 continue;
             }
-            return next == ',' || next == '}' || next == ']' || next == ':';
+            // JSON 结构字符：一定是字符串终止符
+            if (next == ',' || next == '}' || next == ']' || next == ':') {
+                return true;
+            }
+            // 另一个字符串开始：也是终止符（当前字符串已结束）
+            if (next == '"') {
+                return true;
+            }
+            // 中文/日文/韩文字符紧跟在引号后面 → 说明这个引号是嵌入的，不是终止符
+            // 例如: "存在"冷场"的习惯" 中 "冷" 前面的 " 是嵌入引号
+            if (next >= 0x4E00 && next <= 0x9FFF) {
+                return false;
+            }
+            // 英文字母或数字紧跟 → 也可能是嵌入引号
+            if (Character.isLetterOrDigit(next)) {
+                return false;
+            }
+            // 其他字符（标点等）：保守判断为终止符
+            return true;
         }
         return true;
     }
