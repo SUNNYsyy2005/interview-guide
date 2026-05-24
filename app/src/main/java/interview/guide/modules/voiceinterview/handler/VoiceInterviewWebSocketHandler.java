@@ -1237,7 +1237,7 @@ public class VoiceInterviewWebSocketHandler extends TextWebSocketHandler impleme
                     history.add("面试官：" + pendingAiQuestion);
                     pendingAiQuestion = null;
                     if (userText != null) {
-                        history.add("候选人：" + userText);
+                        history.add("申请者：" + userText);
                     }
                     if (aiText != null) {
                         pendingAiQuestion = aiText;
@@ -1247,11 +1247,11 @@ public class VoiceInterviewWebSocketHandler extends TextWebSocketHandler impleme
 
                 if (aiText != null && userText != null) {
                     history.add("面试官：" + aiText);
-                    history.add("候选人：" + userText);
+                    history.add("申请者：" + userText);
                 } else if (aiText != null) {
                     pendingAiQuestion = aiText;
                 } else if (userText != null) {
-                    history.add("候选人：" + userText);
+                    history.add("申请者：" + userText);
                 }
             }
             if (pendingAiQuestion != null) {

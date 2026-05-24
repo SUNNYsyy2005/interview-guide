@@ -51,15 +51,15 @@ public class InterviewQuestionService {
 
     private static final String GENERIC_MODE_SYSTEM_APPEND = """
         \n\n# 通用面试模式
-        本次面试无候选人简历，请出该方向的标准面试题。
+        本次面试无申请者简历，请出该方向的标准面试题。
         - 禁止出现"你在简历中提到..."、"你在项目中..."等暗示存在简历的表述
         - 问题表述应与简历无关，直接考察该方向的技术能力
         """;
 
     private static final Map<String, String> DIFFICULTY_DESCRIPTIONS = Map.of(
-        "junior", "校招/0-1年经验。考察基础概念和简单应用。",
-        "mid", "1-3年经验。考察原理理解和实战经验。",
-        "senior", "3年+经验。考察架构设计和深度调优。"
+        "junior", "基础/入门。考察核心概念和简单应用。",
+        "mid", "进阶/熟练。考察原理理解和实战经验。",
+        "senior", "深入/精通。考察架构设计和深度调优。"
     );
 
     private static final String[][] GENERIC_FALLBACK_QUESTIONS = {
@@ -431,17 +431,29 @@ public class InterviewQuestionService {
             return "";
         }
         return PromptSecurityConstants.DATA_BOUNDARY_INSTRUCTION + "\n" +
-            "## 职位描述（JD）\n根据以下 JD 关键要求出题，确保题目与岗位实际需求相关：\n" +
+            "## 研究方向/导师要求\n根据以下研究方向关键要求出题，确保题目与研究方向实际需求相关：\n" +
             promptSanitizer.wrapWithDelimiters("jd", promptSanitizer.sanitize(sourceJd));
     }
 
     private String buildSkillPersonaSection(SkillDTO skill) {
-        if (skill == null || skill.persona() == null || skill.persona().isBlank()) {
-            return "";
+        StringBuilder sb = new StringBuilder();
+
+        // 默认人设（baoyan-prescreen）始终注入
+        String defaultPersona = skillService.getDefaultPersona();
+        if (defaultPersona != null && !defaultPersona.isBlank()) {
+            sb.append("\n\n# Default Persona\n")
+                .append("以下内容是全局面试人设，请严格遵守其角色、风格与出题约束：\n")
+                .append(promptSanitizer.wrapWithDelimiters("default_persona", defaultPersona));
         }
-        return "\n\n# Skill Persona\n"
-            + "以下内容来自当前面试方向的 SKILL.md，请作为面试官角色、风格与出题约束：\n"
-            + promptSanitizer.wrapWithDelimiters("skill_persona", skill.persona());
+
+        // 方向特定人设追加
+        if (skill != null && skill.persona() != null && !skill.persona().isBlank()) {
+            sb.append("\n\n# Skill Persona\n")
+                .append("以下内容来自当前面试方向的 SKILL.md，请作为面试官角色、风格与出题约束：\n")
+                .append(promptSanitizer.wrapWithDelimiters("skill_persona", skill.persona()));
+        }
+
+        return sb.toString();
     }
 
     private List<String> sanitizeFollowUps(List<String> followUps) {

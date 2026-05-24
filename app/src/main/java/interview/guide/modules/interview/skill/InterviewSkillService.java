@@ -63,6 +63,9 @@ public class InterviewSkillService {
     private final ResourceLoader resourceLoader;
     private final PromptSanitizer promptSanitizer;
 
+    /** 全局默认面试人设（baoyan-prescreen 的 SKILL.md body），所有面试方向共用 */
+    private String defaultPersona;
+
     /** 预设 Skill 注册表，启动时从 classpath:skills/{skillId}/SKILL.md 加载 */
     private final Map<String, InterviewSkillProperties.SkillDefinition> presetRegistry = new TreeMap<>();
 
@@ -107,6 +110,14 @@ public class InterviewSkillService {
                 continue;
             }
 
+            // baoyan-prescreen 作为全局默认人设，不加入可选列表
+            if ("baoyan-prescreen".equals(skillId)) {
+                defaultPersona = def.getPersona();
+                log.info("加载默认面试人设: {} ({}), 长度={} 字符", skillId, def.getName(),
+                    defaultPersona != null ? defaultPersona.length() : 0);
+                continue;
+            }
+
             presetRegistry.put(skillId, def);
             log.info("加载预设 Skill: {} ({})", skillId, def.getName());
         }
@@ -136,6 +147,14 @@ public class InterviewSkillService {
         return presetRegistry.entrySet().stream()
             .map(e -> toSkillDTO(e.getKey(), e.getValue()))
             .toList();
+    }
+
+    /**
+     * 获取全局默认面试人设（baoyan-prescreen 的 persona）。
+     * 所有面试方向共用此人设，作为保研面试的基础行为准则。
+     */
+    public String getDefaultPersona() {
+        return defaultPersona;
     }
 
     public SkillDTO getSkill(String skillId) {
@@ -175,7 +194,7 @@ public class InterviewSkillService {
         log.info("构建自定义 Skill: {} 个分类, {} 个匹配到参考文件", categories.size(), matchedCount);
 
         return new SkillDTO(CUSTOM_SKILL_ID, "自定义面试（JD 解析）",
-            "基于职位描述提取的面试方向", categories,
+            "基于研究方向提取的面试方向", categories,
             false, jdText, null, null);
     }
 
@@ -191,7 +210,7 @@ public class InterviewSkillService {
             "referenceFileList", cachedReferenceFileList
         )) + "\n\n" + jdOutputConverter.getFormat();
         String userPrompt = PromptSecurityConstants.DATA_BOUNDARY_INSTRUCTION + "\n" +
-            "职位描述：\n" +
+            "研究方向/导师要求：\n" +
             promptSanitizer.wrapWithDelimiters("jd", promptSanitizer.sanitize(jdText));
 
         try {
