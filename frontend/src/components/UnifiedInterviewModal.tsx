@@ -81,16 +81,21 @@ export default function UnifiedInterviewModal({
   }, [isOpen, defaultMode, defaultResumeId]);
 
   const handleStart = () => {
-    const selectedSkill = config.selectedSkill;
+    // 如果选了"自定义"但没解析过方向，回退到第一个预设 skill
+    let effectiveSkillId = config.skillId;
+    if (config.isCustomSkill && config.customCategories.length === 0 && config.skills.length > 0) {
+      effectiveSkillId = config.skills[0].id;
+    }
 
-    if (config.isCustomStartDisabled) {
+    if (config.isCustomStartDisabled && effectiveSkillId === CUSTOM_SKILL_ID) {
       return;
     }
 
+    const effectiveSkill = config.skills.find(s => s.id === effectiveSkillId);
     onStart({
       mode: config.mode,
-      skillId: config.skillId,
-      skillName: selectedSkill?.name || '自定义',
+      skillId: effectiveSkillId,
+      skillName: effectiveSkill?.name || '自定义',
       difficulty: config.difficulty,
       resumeId: config.resumeId,
       llmProvider: config.llmProvider,

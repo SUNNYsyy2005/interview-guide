@@ -91,10 +91,16 @@ export default function InterviewHubPage() {
   }, []);
 
   const handleStart = () => {
-    const selectedSkill = config.selectedSkill;
+    // 如果选了"自定义"但没解析过方向，回退到第一个预设 skill
+    let effectiveSkillId = config.skillId;
+    if (config.isCustomSkill && config.customCategories.length === 0 && config.skills.length > 0) {
+      effectiveSkillId = config.skills[0].id;
+    }
+
+    const selectedSkill = config.skills.find(s => s.id === effectiveSkillId);
     const skillName = selectedSkill?.name || '自定义';
 
-    if (config.isCustomStartDisabled) {
+    if (config.isCustomStartDisabled && effectiveSkillId === CUSTOM_SKILL_ID) {
       return;
     }
 
@@ -102,7 +108,7 @@ export default function InterviewHubPage() {
         state: {
           resumeId: config.resumeId,
           interviewConfig: {
-            skillId: config.skillId,
+            skillId: effectiveSkillId,
             skillName,
             difficulty: config.difficulty,
             questionCount: config.questionCount,
