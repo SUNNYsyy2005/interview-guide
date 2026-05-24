@@ -573,7 +573,7 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
                         )}
                         {isEvaluateCompleted(item) && item.type === 'text' && onRestartInterview && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); onRestartInterview(item.resumeId ?? undefined); }}
+                            onClick={(e) => { e.stopPropagation(); onRestartInterview(item.resumeId ?? 0); }}
                             className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors"
                             title="重新面试"
                           >
