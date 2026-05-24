@@ -19,6 +19,8 @@ export interface InterviewQuestion {
   userAnswer: string | null;
   score: number | null;
   feedback: string | null;
+  isFollowUp?: boolean;
+  parentQuestionIndex?: number | null;
 }
 
 export interface CreateInterviewRequest {
@@ -44,6 +46,8 @@ export interface SubmitAnswerResponse {
   nextQuestion: InterviewQuestion | null;
   currentIndex: number;
   totalQuestions: number;
+  decision: 'FOLLOW_UP' | 'NEXT_MAIN' | 'COMPLETE';
+  session: InterviewSession;
 }
 
 export interface CurrentQuestionResponse {

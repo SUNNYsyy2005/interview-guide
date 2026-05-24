@@ -200,62 +200,17 @@ export default function Interview({
 
       setAnswer('');
 
+      const updatedSession = response.session;
+      if (updatedSession) {
+        setSession(updatedSession);
+      }
+
       if (response.hasNextQuestion && response.nextQuestion) {
         const nextCursor = clampQuestionCursor(response.totalQuestions, response.currentIndex);
         const nextQuestion = response.nextQuestion;
-
-        setSession((prev) => {
-          if (!prev) return prev;
-
-          const nextQuestions = [...prev.questions];
-          const existingQuestionIndex = nextQuestions.findIndex(
-            (question) => question.questionIndex === nextQuestion.questionIndex,
-          );
-
-          if (existingQuestionIndex >= 0) {
-            nextQuestions[existingQuestionIndex] = nextQuestion;
-          } else if (nextCursor >= nextQuestions.length) {
-            nextQuestions.push(nextQuestion);
-          } else {
-            nextQuestions.splice(nextCursor, 0, nextQuestion);
-          }
-
-          if (currentCursor < nextQuestions.length) {
-            nextQuestions[currentCursor] = {
-              ...nextQuestions[currentCursor],
-              userAnswer: submittedAnswer,
-            };
-          }
-
-          return {
-            ...prev,
-            questions: nextQuestions,
-            currentQuestionIndex: nextCursor,
-            totalQuestions: response.totalQuestions,
-          };
-        });
-
         setCurrentQuestion(nextQuestion);
         setMessages((prev) => [...prev, toInterviewerMessage(nextQuestion, nextCursor)]);
       } else {
-        setSession((prev) => {
-          if (!prev) return prev;
-
-          const nextQuestions = [...prev.questions];
-          if (currentCursor < nextQuestions.length) {
-            nextQuestions[currentCursor] = {
-              ...nextQuestions[currentCursor],
-              userAnswer: submittedAnswer,
-            };
-          }
-
-          return {
-            ...prev,
-            questions: nextQuestions,
-            totalQuestions: response.totalQuestions,
-            currentQuestionIndex: clampQuestionCursor(response.totalQuestions, response.currentIndex),
-          };
-        });
         onInterviewComplete();
       }
     } catch (err) {

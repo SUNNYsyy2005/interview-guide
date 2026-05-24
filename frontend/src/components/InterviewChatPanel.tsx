@@ -44,18 +44,32 @@ export default function InterviewChatPanel({
 }: InterviewChatPanelProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
+  const mainQuestionIndexes = useMemo(() => {
+    return session.questions
+      .map((question, index) => ({ question, index }))
+      .filter(({ question }) => !question.isFollowUp)
+      .map(({ index }) => index);
+  }, [session.questions]);
+
   const currentDisplayOrder = useMemo(() => {
     if (!session || !currentQuestion) return 0;
     const currentIndex = Number.isFinite(session.currentQuestionIndex)
       ? session.currentQuestionIndex
       : 0;
-    return Math.min(Math.max(currentIndex, 0), Math.max(session.totalQuestions - 1, 0));
+    return Math.min(Math.max(currentIndex, 0), Math.max(session.questions.length - 1, 0));
   }, [session, currentQuestion]);
 
+  const currentMainDisplayOrder = useMemo(() => {
+    const currentIndex = currentDisplayOrder;
+    const matchedIndex = mainQuestionIndexes.findIndex((index) => index >= currentIndex);
+    if (matchedIndex >= 0) return matchedIndex;
+    return Math.max(mainQuestionIndexes.length - 1, 0);
+  }, [currentDisplayOrder, mainQuestionIndexes]);
+
   const progress = useMemo(() => {
-    if (!session || !currentQuestion || session.totalQuestions <= 0) return 0;
-    return ((currentDisplayOrder + 1) / session.totalQuestions) * 100;
-  }, [session, currentQuestion, currentDisplayOrder]);
+    if (!session || !currentQuestion || mainQuestionIndexes.length <= 0) return 0;
+    return ((currentMainDisplayOrder + 1) / mainQuestionIndexes.length) * 100;
+  }, [session, currentQuestion, currentMainDisplayOrder, mainQuestionIndexes]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -70,9 +84,9 @@ export default function InterviewChatPanel({
             className="bg-white dark:bg-slate-800 rounded-2xl p-6 mb-4 shadow-sm dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            {currentQuestion?.questionIndex === currentDisplayOrder
-              ? `题目 ${currentDisplayOrder + 1} / ${session.totalQuestions}`
-              : `当前进行到第 ${currentDisplayOrder + 1} 题 / 共 ${session.totalQuestions} 题`}
+            {currentQuestion?.isFollowUp
+              ? `当前追问（主问题 ${currentMainDisplayOrder + 1} / ${mainQuestionIndexes.length}）`
+              : `主问题 ${currentMainDisplayOrder + 1} / ${mainQuestionIndexes.length}`}
           </span>
             <span className="text-sm text-slate-500 dark:text-slate-400">
             {Math.round(progress)}%

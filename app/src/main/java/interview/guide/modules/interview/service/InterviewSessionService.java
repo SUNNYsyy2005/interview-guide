@@ -46,6 +46,7 @@ public class InterviewSessionService {
     private final ObjectMapper objectMapper;
     private final EvaluateStreamProducer evaluateStreamProducer;
     private final LlmProviderRegistry llmProviderRegistry;
+    private final InterviewFollowUpService followUpService;
 
     /**
      * 创建新的面试会话
@@ -293,46 +294,96 @@ public class InterviewSessionService {
         CachedSession session = getOrRestoreSession(request.sessionId());
         List<InterviewQuestionDTO> questions = session.getQuestions(objectMapper);
 
-        int index = request.questionIndex();
-        if (index < 0 || index >= questions.size()) {
-            throw new BusinessException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND, "无效的问题索引: " + index);
+        int currentIndex = session.getCurrentIndex();
+        if (currentIndex < 0 || currentIndex >= questions.size()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND, "当前题目索引无效: " + currentIndex);
         }
 
-        // 更新问题答案
-        InterviewQuestionDTO question = questions.get(index);
-        InterviewQuestionDTO answeredQuestion = question.withAnswer(request.answer());
-        questions.set(index, answeredQuestion);
+        InterviewQuestionDTO currentQuestion = questions.get(currentIndex);
+        if (currentQuestion.questionIndex() != request.questionIndex()) {
+            log.warn("提交答案的题目 identity 与当前游标不一致: sessionId={}, requestQuestionIndex={}, currentCursor={}, currentIdentity={}",
+                request.sessionId(), request.questionIndex(), currentIndex, currentQuestion.questionIndex());
+        }
 
-        // 移动到下一题
-        int newIndex = index + 1;
+        InterviewQuestionDTO answeredQuestion = currentQuestion.withAnswer(request.answer());
+        questions.set(currentIndex, answeredQuestion);
 
-        // 检查是否全部完成
-        boolean hasNextQuestion = newIndex < questions.size();
-        InterviewQuestionDTO nextQuestion = hasNextQuestion ? questions.get(newIndex) : null;
+        InterviewQuestionDTO mainQuestion = resolveMainQuestion(questions, currentQuestion);
+        int askedFollowUpCount = countAskedFollowUps(questions, mainQuestion.questionIndex());
+        int maxFollowUpCount = followUpService.getMaxFollowUpCount();
 
+        String llmProvider = null;
+        String skillId = InterviewDefaults.SKILL_ID;
+        try {
+            Optional<InterviewSessionEntity> entityOpt = persistenceService.findBySessionId(request.sessionId());
+            if (entityOpt.isPresent()) {
+                llmProvider = entityOpt.get().getLlmProvider();
+                if (entityOpt.get().getSkillId() != null && !entityOpt.get().getSkillId().isBlank()) {
+                    skillId = entityOpt.get().getSkillId();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("加载会话元数据失败，使用默认 skill/llmProvider 继续实时追问: {}", e.getMessage());
+        }
+
+        InterviewFollowUpService.FollowUpDecision decision = followUpService.decide(
+            llmProvider,
+            skillId,
+            currentQuestion,
+            mainQuestion,
+            request.answer(),
+            askedFollowUpCount,
+            followUpService.buildRecentContext(questions, currentIndex),
+            session.getResumeText()
+        );
+
+        int newIndex;
+        InterviewQuestionDTO nextQuestion;
+        String decisionType;
+
+        if (decision.shouldFollowUp()) {
+            newIndex = currentIndex + 1;
+            int insertIdentity = determineNextQuestionIdentity(questions);
+            InterviewQuestionDTO followUpQuestion = InterviewQuestionDTO.create(
+                insertIdentity,
+                decision.question(),
+                currentQuestion.type(),
+                currentQuestion.category(),
+                mainQuestion.topicSummary(),
+                true,
+                mainQuestion.questionIndex()
+            );
+            questions.add(newIndex, followUpQuestion);
+            nextQuestion = followUpQuestion;
+            decisionType = "FOLLOW_UP";
+        } else {
+            newIndex = currentIndex + 1;
+            nextQuestion = newIndex < questions.size() ? questions.get(newIndex) : null;
+            decisionType = nextQuestion == null ? "COMPLETE" : "NEXT_MAIN";
+        }
+
+        boolean hasNextQuestion = nextQuestion != null;
         SessionStatus newStatus = hasNextQuestion ? SessionStatus.IN_PROGRESS : SessionStatus.COMPLETED;
 
-        // 更新 Redis 缓存
         sessionCache.updateQuestions(request.sessionId(), questions);
-        sessionCache.updateCurrentIndex(request.sessionId(), newIndex);
-        if (newStatus == SessionStatus.COMPLETED) {
-            sessionCache.updateSessionStatus(request.sessionId(), SessionStatus.COMPLETED);
-        }
+        sessionCache.updateCurrentIndex(request.sessionId(), Math.min(newIndex, questions.size()));
+        sessionCache.updateSessionStatus(request.sessionId(), newStatus);
 
-        // 保存答案到数据库
         try {
             persistenceService.saveAnswer(
-                request.sessionId(), index,
-                question.question(), question.category(),
-                request.answer(), 0, null  // 分数在报告生成时更新
+                request.sessionId(), currentQuestion.questionIndex(),
+                currentQuestion.question(), currentQuestion.category(),
+                request.answer(), 0, null
             );
-            persistenceService.updateCurrentQuestionIndex(request.sessionId(), newIndex);
-            persistenceService.updateSessionStatus(request.sessionId(),
+            persistenceService.updateSessionQuestionState(
+                request.sessionId(),
+                questions,
+                Math.min(newIndex, questions.size()),
                 newStatus == SessionStatus.COMPLETED
                     ? InterviewSessionEntity.SessionStatus.COMPLETED
-                    : InterviewSessionEntity.SessionStatus.IN_PROGRESS);
+                    : InterviewSessionEntity.SessionStatus.IN_PROGRESS
+            );
 
-            // 如果是最后一题，设置评估状态为 PENDING 并触发异步评估
             if (!hasNextQuestion) {
                 persistenceService.updateEvaluateStatus(request.sessionId(), AsyncTaskStatus.PENDING, null);
                 evaluateStreamProducer.sendEvaluateTask(request.sessionId());
@@ -342,14 +393,25 @@ public class InterviewSessionService {
             log.warn("保存答案到数据库失败: {}", e.getMessage());
         }
 
-        log.info("会话 {} 提交答案: 问题{}, 剩余{}题",
-            request.sessionId(), index, questions.size() - newIndex);
+        InterviewSessionDTO updatedSession = new InterviewSessionDTO(
+            request.sessionId(),
+            session.getResumeText(),
+            questions.size(),
+            Math.min(newIndex, questions.size()),
+            questions,
+            newStatus
+        );
+
+        log.info("会话 {} 提交答案: 当前题identity={}, 决策={}, 剩余{}题",
+            request.sessionId(), currentQuestion.questionIndex(), decisionType, Math.max(questions.size() - newIndex, 0));
 
         return new SubmitAnswerResponse(
             hasNextQuestion,
             nextQuestion,
-            newIndex,
-            questions.size()
+            Math.min(newIndex, questions.size()),
+            questions.size(),
+            decisionType,
+            updatedSession
         );
     }
 
@@ -392,6 +454,30 @@ public class InterviewSessionService {
         }
 
         log.info("会话 {} 暂存答案: 问题{}", request.sessionId(), index);
+    }
+
+    private InterviewQuestionDTO resolveMainQuestion(List<InterviewQuestionDTO> questions, InterviewQuestionDTO currentQuestion) {
+        if (!currentQuestion.isFollowUp() || currentQuestion.parentQuestionIndex() == null) {
+            return currentQuestion;
+        }
+        return questions.stream()
+            .filter(question -> question.questionIndex() == currentQuestion.parentQuestionIndex())
+            .findFirst()
+            .orElse(currentQuestion);
+    }
+
+    private int countAskedFollowUps(List<InterviewQuestionDTO> questions, int mainQuestionIndex) {
+        return (int) questions.stream()
+            .filter(question -> question.isFollowUp() && question.parentQuestionIndex() != null)
+            .filter(question -> question.parentQuestionIndex() == mainQuestionIndex)
+            .count();
+    }
+
+    private int determineNextQuestionIdentity(List<InterviewQuestionDTO> questions) {
+        return questions.stream()
+            .mapToInt(InterviewQuestionDTO::questionIndex)
+            .max()
+            .orElse(-1) + 1;
     }
 
     /**

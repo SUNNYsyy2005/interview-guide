@@ -320,16 +320,7 @@ public class InterviewQuestionService {
                 continue;
             }
             String type = (q.type() != null && !q.type().isBlank()) ? q.type().toUpperCase() : DEFAULT_QUESTION_TYPE;
-            int mainQuestionIndex = index;
             questions.add(InterviewQuestionDTO.create(index++, q.question(), type, q.category(), q.topicSummary(), false, null));
-
-            List<String> followUps = sanitizeFollowUps(q.followUps());
-            for (int i = 0; i < followUps.size(); i++) {
-                questions.add(InterviewQuestionDTO.create(
-                    index++, followUps.get(i), type,
-                    buildFollowUpCategory(q.category(), i + 1), null, true, mainQuestionIndex
-                ));
-            }
         }
 
         return questions;
@@ -375,13 +366,6 @@ public class InterviewQuestionService {
                 SkillCategoryDTO cat = categories.get(generated % categories.size());
                 String question = "请谈谈你在\"" + cat.label() + "\"方向的技术理解和实践经验。";
                 questions.add(InterviewQuestionDTO.create(index++, question, cat.key(), cat.label(), null, false, null));
-                int mainIndex = index - 1;
-                for (int j = 0; j < followUpCount; j++) {
-                    questions.add(InterviewQuestionDTO.create(
-                        index++, buildDefaultFollowUp(question, j + 1),
-                        cat.key(), buildFollowUpCategory(cat.label(), j + 1), null, true, mainIndex
-                    ));
-                }
                 generated++;
             }
             return questions;
@@ -390,13 +374,6 @@ public class InterviewQuestionService {
         for (int i = 0; i < Math.min(count, GENERIC_FALLBACK_QUESTIONS.length); i++) {
             String[] q = GENERIC_FALLBACK_QUESTIONS[i];
             questions.add(InterviewQuestionDTO.create(index++, q[0], q[1], q[2], null, false, null));
-            int mainIndex = index - 1;
-            for (int j = 0; j < followUpCount; j++) {
-                questions.add(InterviewQuestionDTO.create(
-                    index++, buildDefaultFollowUp(q[0], j + 1),
-                    q[1], buildFollowUpCategory(q[2], j + 1), null, true, mainIndex
-                ));
-            }
         }
         return questions;
     }
@@ -456,26 +433,4 @@ public class InterviewQuestionService {
         return sb.toString();
     }
 
-    private List<String> sanitizeFollowUps(List<String> followUps) {
-        if (followUpCount == 0 || followUps == null || followUps.isEmpty()) {
-            return List.of();
-        }
-        return followUps.stream()
-            .filter(item -> item != null && !item.isBlank())
-            .map(String::trim)
-            .limit(followUpCount)
-            .collect(Collectors.toList());
-    }
-
-    private String buildFollowUpCategory(String category, int order) {
-        String base = (category == null || category.isBlank()) ? "追问" : category;
-        return base + "（追问" + order + "）";
-    }
-
-    private String buildDefaultFollowUp(String mainQuestion, int order) {
-        if (order == 1) {
-            return "基于\"" + mainQuestion + "\"，请结合你亲自做过的一个真实场景展开说明。";
-        }
-        return "基于\"" + mainQuestion + "\"，如果线上出现异常，你会如何定位并给出修复方案？";
-    }
 }

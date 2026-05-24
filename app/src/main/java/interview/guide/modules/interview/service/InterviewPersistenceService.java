@@ -126,6 +126,36 @@ public class InterviewPersistenceService {
             sessionRepository.save(session);
         }
     }
+
+    /**
+     * 同步更新会话题单、总题数、当前索引和状态。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateSessionQuestionState(
+        String sessionId,
+        List<InterviewQuestionDTO> questions,
+        int currentIndex,
+        InterviewSessionEntity.SessionStatus status
+    ) {
+        Optional<InterviewSessionEntity> sessionOpt = sessionRepository.findBySessionId(sessionId);
+        if (sessionOpt.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND);
+        }
+
+        InterviewSessionEntity session = sessionOpt.get();
+        try {
+            session.setQuestionsJson(objectMapper.writeValueAsString(questions));
+        } catch (JacksonException e) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "更新会话题单失败", e);
+        }
+        session.setTotalQuestions(questions.size());
+        session.setCurrentQuestionIndex(currentIndex);
+        session.setStatus(status);
+        if (status == InterviewSessionEntity.SessionStatus.COMPLETED || status == InterviewSessionEntity.SessionStatus.EVALUATED) {
+            session.setCompletedAt(LocalDateTime.now());
+        }
+        sessionRepository.save(session);
+    }
     
     /**
      * 保存面试答案
