@@ -88,7 +88,6 @@ export default function Layout() {
         { id: 'resumes', path: '/history', label: '简历管理', icon: FileStack, description: '管理简历，AI 分析' },
         { id: 'interview-hub', path: '/interview-hub', label: '模拟面试', icon: Sparkles, description: '文字/语音面试练习' },
         { id: 'interviews', path: '/interviews', label: '面试记录', icon: Users, description: '查看面试历史' },
-        { id: 'interview-schedule', path: '/interview-schedule', label: '面试日程', icon: Calendar, description: '管理面试安排' },
       ],
     },
     {
@@ -140,8 +139,8 @@ export default function Layout() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight block">AI Interview</span>
-              <span className="text-xs text-slate-400 dark:text-slate-500">智能面试助手</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight block">保研预推免</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">AI 学长陪练</span>
             </div>
           </Link>
         </div>
@@ -221,8 +220,8 @@ export default function Layout() {
         {/* 底部信息 */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-700">
           <div className="px-3 py-2 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/30 dark:to-slate-800 rounded-xl">
-            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">AI 面试助手 v1.0</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Powered by AI</p>
+            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">保研预推免陪练 v1.0</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">AI 学长陪练</p>
           </div>
         </div>
       </aside>

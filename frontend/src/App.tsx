@@ -170,7 +170,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             {/* 默认重定向到简历管理页面 */}
-            <Route index element={<Navigate to="/history" replace />} />
+            <Route index element={<Navigate to="/interview-hub" replace />} />
 
             {/* 上传页面 */}
             <Route path="upload" element={<UploadPageWrapper />} />

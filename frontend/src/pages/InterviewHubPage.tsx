@@ -36,7 +36,7 @@ export default function InterviewHubPage() {
 
   const config = useInterviewConfig({ autoLoad: false });
 
-  // === 最近面试记录 ===
+  // === 最近陪练记录 ===
   const [recentInterviews, setRecentInterviews] = useState<RecentInterviewItem[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(false);
 
@@ -136,9 +136,9 @@ export default function InterviewHubPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
           <Sparkles className="w-7 h-7 text-primary-500" />
-          模拟面试
+          保研预推免 AI 学长陪练
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">选择面试模式和方向，快速开始练习</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">像资深学长一样连续追问，像面试教练一样给出可执行反馈</p>
       </div>
 
       {/* 配置区域 */}
@@ -149,21 +149,14 @@ export default function InterviewHubPage() {
             <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
               面试模式
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               {([
                 {
                   value: 'text' as InterviewMode,
-                  label: '文字面试',
+                  label: 'AI 学长陪练',
                   icon: FileText,
-                  desc: '推荐：更稳定，更适合系统化刷题与复盘',
+                  desc: '连续追问 + 针对性反馈，模拟真实保研面试',
                   recommended: true,
-                },
-                {
-                  value: 'voice' as InterviewMode,
-                  label: '语音面试',
-                  icon: Mic,
-                  desc: '实时语音对话，更偏临场模拟',
-                  recommended: false,
                 },
               ]).map(opt => {
                 const Icon = opt.icon;
@@ -196,10 +189,10 @@ export default function InterviewHubPage() {
             </div>
           </div>
 
-          {/* 面试方向 */}
+          {/* 训练方向 */}
           <div>
             <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              面试方向
+              训练方向
             </label>
             {config.loadingSkills ? (
               <div className="flex items-center gap-2 py-4 text-slate-400">
@@ -293,7 +286,7 @@ export default function InterviewHubPage() {
                       disabled:cursor-not-allowed transition-colors"
                   >
                     {config.parsingJd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    解析面试方向
+                    解析训练方向
                   </button>
                   {config.customCategories.length > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -451,15 +444,15 @@ export default function InterviewHubPage() {
               bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700
               text-white shadow-lg shadow-primary-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            开始{config.mode === 'text' ? '文字' : '语音'}面试
+            开始 AI 学长陪练
           </motion.button>
         </div>
       </div>
 
-      {/* 最近面试记录 */}
+      {/* 最近陪练记录 */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white">最近面试记录</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white">最近陪练记录</h2>
           <Link
             to="/interviews"
             className="text-sm text-primary-500 hover:text-primary-600 font-medium transition-colors"
