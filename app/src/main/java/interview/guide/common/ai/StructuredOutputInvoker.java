@@ -114,6 +114,9 @@ public class StructuredOutputInvoker {
         // 1. 先去除可能的 Markdown 代码块包裹
         String cleaned = stripMarkdownCodeFences(content);
 
+        // 1.5 去除重复 JSON key（AI 有时返回多个同名字段）
+        cleaned = deduplicateJsonKeys(cleaned);
+
         // 2. 直接尝试解析
         try {
             return outputConverter.convert(cleaned);
@@ -162,6 +165,27 @@ public class StructuredOutputInvoker {
             trimmed = trimmed.strip();
         }
         return trimmed;
+    }
+
+    /**
+     * 去除 JSON 中的重复 key。
+     * AI 有时返回多个同名字段（如多个 "strengths": ...），Jackson 反序列化 record 时会报错。
+     * 策略：用 Jackson ObjectMapper 以保留顺序的方式解析，遇到重复 key 时后面的覆盖前面的。
+     * 如果解析失败（如 JSON 本身有语法错误），原样返回让后续修复逻辑处理。
+     */
+    private String deduplicateJsonKeys(String json) {
+        if (json == null || json.isBlank()) return json;
+        try {
+            // 用 LinkedHashMap 保持顺序，重复 key 后值覆盖前值
+            com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
+            java.util.LinkedHashMap<String, Object> map =
+                mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+            return mapper.writeValueAsString(map);
+        } catch (Exception e) {
+            // JSON 语法本身有问题，原样返回，让后续修复逻辑处理
+            return json;
+        }
     }
 
     private String repairUnescapedQuotesInJsonStrings(String content) {

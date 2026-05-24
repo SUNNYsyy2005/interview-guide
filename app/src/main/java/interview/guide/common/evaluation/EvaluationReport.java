@@ -14,7 +14,8 @@ public record EvaluationReport(
     String overallFeedback,
     List<String> strengths,
     List<String> improvements,
-    List<ReferenceAnswer> referenceAnswers
+    List<ReferenceAnswer> referenceAnswers,
+    List<RetestFocusItem> nextRoundFocus
 ) {
     public record CategoryScore(
         String category,
@@ -36,5 +37,12 @@ public record EvaluationReport(
         String question,
         String referenceAnswer,
         List<String> keyPoints
+    ) {}
+
+    public record RetestFocusItem(
+        String title,
+        String question,
+        String passCriteria,
+        String priority
     ) {}
 }

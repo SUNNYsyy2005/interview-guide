@@ -14,7 +14,8 @@ public record InterviewReportDTO(
     String overallFeedback,                    // 总体评价
     List<String> strengths,                    // 优势
     List<String> improvements,                 // 改进建议
-    List<ReferenceAnswer> referenceAnswers     // 参考答案
+    List<ReferenceAnswer> referenceAnswers,    // 参考答案
+    List<RetestFocusItem> nextRoundFocus       // 下轮复测重点
 ) {
     /**
      * 类别得分
@@ -45,5 +46,12 @@ public record InterviewReportDTO(
         String question,
         String referenceAnswer,
         List<String> keyPoints
+    ) {}
+
+    public record RetestFocusItem(
+        String title,
+        String question,
+        String passCriteria,
+        String priority
     ) {}
 }

@@ -103,4 +103,11 @@ export const interviewApi = {
   async completeInterview(sessionId: string): Promise<void> {
     return request.post<void>(`/api/interview/sessions/${sessionId}/complete`);
   },
+
+  /**
+   * 重新评估
+   */
+  async reEvaluate(sessionId: string): Promise<void> {
+    return request.post<void>(`/api/interview/sessions/${sessionId}/re-evaluate`);
+  },
 };

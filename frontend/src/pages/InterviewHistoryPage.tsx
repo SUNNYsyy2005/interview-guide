@@ -177,6 +177,7 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [deleteItem, setDeleteItem] = useState<UnifiedInterviewItem | null>(null);
   const [exporting, setExporting] = useState<string | null>(null);
+  const [reEvaluatingId, setReEvaluatingId] = useState<string | null>(null);
   const pollingRef = useRef<number | null>(null);
   const skillsRef = useRef<SkillDTO[]>([]);
   const skillsLoadedRef = useRef(false);
@@ -351,6 +352,20 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
       alert('导出失败，请重试');
     } finally {
       setExporting(null);
+    }
+  };
+
+  const handleReEvaluate = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setReEvaluatingId(sessionId);
+    try {
+      await interviewApi.reEvaluate(sessionId);
+      // 刷新列表以显示最新状态
+      await loadAll();
+    } catch {
+      alert('重新评估失败，请重试');
+    } finally {
+      setReEvaluatingId(null);
     }
   };
 
@@ -563,6 +578,20 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
                             title="重新面试"
                           >
                             <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+                        {(isEvaluateFailed(item) || (isCompletedStatus(item.status) && !isEvaluateCompleted(item) && !isEvaluating(item))) && (
+                          <button
+                            onClick={(e) => handleReEvaluate(item.sessionId, e)}
+                            disabled={reEvaluatingId === item.sessionId}
+                            className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50"
+                            title="重新评估"
+                          >
+                            {reEvaluatingId === item.sessionId ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
                           </button>
                         )}
                         <button

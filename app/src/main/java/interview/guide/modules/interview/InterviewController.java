@@ -176,6 +176,16 @@ public class InterviewController {
     }
     
     /**
+     * 重新评估面试（手动重试）
+     */
+    @PostMapping("/api/interview/sessions/{sessionId}/re-evaluate")
+    public Result<Void> reEvaluate(@PathVariable String sessionId) {
+        log.info("手动重新评估: {}", sessionId);
+        sessionService.reEvaluate(sessionId);
+        return Result.success(null);
+    }
+
+    /**
      * 删除面试会话
      */
     @DeleteMapping("/api/interview/sessions/{sessionId}")

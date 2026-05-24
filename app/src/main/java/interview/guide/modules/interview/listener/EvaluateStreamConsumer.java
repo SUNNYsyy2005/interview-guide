@@ -117,10 +117,12 @@ public class EvaluateStreamConsumer extends AbstractStreamConsumer<EvaluateStrea
 
         List<InterviewAnswerEntity> answers = persistenceService.findAnswersBySessionId(sessionId);
         for (InterviewAnswerEntity answer : answers) {
-            int index = answer.getQuestionIndex();
-            if (index >= 0 && index < questions.size()) {
-                InterviewQuestionDTO question = questions.get(index);
-                questions.set(index, question.withAnswer(answer.getUserAnswer()));
+            for (int i = 0; i < questions.size(); i++) {
+                InterviewQuestionDTO question = questions.get(i);
+                if (question.questionIndex() == answer.getQuestionIndex()) {
+                    questions.set(i, question.withAnswer(answer.getUserAnswer()));
+                    break;
+                }
             }
         }
 

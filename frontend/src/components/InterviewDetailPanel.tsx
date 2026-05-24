@@ -817,34 +817,31 @@ function pickRetestFocus(
     return uniqueFocusItems(normalizedBackendFocus).slice(0, 4);
   }
 
-  const dimensionFocus = dimensions
-    .filter(dimension => dimension.trend !== 'strong')
-    .slice(0, 2)
-    .map((dimension, index) => ({
-      title: `${dimension.name} 复测`,
-      detail: `下轮优先安排 ${dimension.name} 相关问题，目标是把该维度从 ${dimension.score} 分提升到 ${dimension.score < 70 ? '70+' : '85+'}。`,
-      priority: index === 0 && dimension.score < 70 ? 'high' as const : 'medium' as const,
-    }));
+  const answerFocus = mergeRetestFocusByTitle(
+    answers
+      .filter(answer => typeof answer.score === 'number' && answer.score < 75)
+      .sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
+      .map((answer, index) => createRetestFocusFromAnswer(answer, index === 0 ? 'high' : 'medium'))
+  );
 
-  const answerFocus = answers
-    .filter(answer => typeof answer.score === 'number' && answer.score < 75)
-    .sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
-    .slice(0, 2)
-    .map((answer, index) => ({
-      title: `${answer.category?.trim() || '综合能力'} 第 ${(answer.questionIndex ?? 0) + 1} 题`,
-      detail: answer.question?.trim()
-        ? `建议复测题目：“${answer.question.trim()}” 并验证是否已补齐关键论证与细节。`
-        : '建议重新练习本次低分题，验证知识准确性和表达完整度是否有提升。',
-      priority: index === 0 ? 'high' as const : 'medium' as const,
-    }));
+  if (answerFocus.length > 0) {
+    return answerFocus.slice(0, 3);
+  }
 
-  const fallback = {
+  const fallbackDimension = dimensions.find(dimension => dimension.trend !== 'strong');
+  if (fallbackDimension) {
+    return [{
+      title: '关键短板稳定性复测',
+      detail: `下一轮围绕 ${fallbackDimension.name} 对应的真实应用场景继续追问，确认你能否稳定说清问题背景、核心方案、关键证据和实现边界。`,
+      priority: 'medium',
+    }];
+  }
+
+  return [{
     title: '综合追问稳定性',
     detail: '在下一轮增加追问和场景化变体，确认改进项不是“知道答案”，而是真正能稳定讲清楚。',
-    priority: 'medium' as const,
-  };
-
-  return uniqueFocusItems([...dimensionFocus, ...answerFocus, fallback]).slice(0, 4);
+    priority: 'medium',
+  }];
 }
 
 function normalizeBackendDimension(item: unknown): Partial<DiagnosisDimension> {
@@ -902,6 +899,92 @@ function normalizeRetestFocus(item: unknown): RetestFocus | null {
   const priority = priorityText === 'high' || priorityText === 'critical' ? 'high' : 'medium';
 
   return { title, detail, priority };
+}
+
+function createRetestFocusFromAnswer(
+  answer: AnswerRecord,
+  priority: 'high' | 'medium'
+): RetestFocus {
+  const question = answer.question?.trim() ?? '';
+  const normalizedQuestion = question.toLowerCase();
+  const title = inferRetestTitle(answer, normalizedQuestion);
+  const detail = buildRetestDetail(title, question);
+  return { title, detail, priority };
+}
+
+function inferRetestTitle(answer: AnswerRecord, normalizedQuestion: string): string {
+  const category = answer.category?.trim() ?? '';
+
+  if (containsAny(normalizedQuestion, ['接口', '对接', '数据流', 'topic', '格式', '传给', '输出什么'])) {
+    return '模块接口与数据流复测';
+  }
+  if (containsAny(normalizedQuestion, ['指标', '量化', '评估', '实验', '验证', 'baseline', '对比'])) {
+    return '实验验证与量化指标复测';
+  }
+  if (containsAny(normalizedQuestion, ['为什么', '选择', '替代方案', 'trade-off', '权衡'])) {
+    return '方案选型与设计权衡复测';
+  }
+  if (containsAny(normalizedQuestion, ['负责', '贡献', '你做了什么', '个人完成', '参与边界'])) {
+    return '个人贡献边界复测';
+  }
+  if (containsAny(normalizedQuestion, ['项目', '方案', '输入', '输出', '原理'])) {
+    return '项目真实性与技术链路复测';
+  }
+  if (category) {
+    return `${category} 关键能力复测`;
+  }
+  return '关键短板复测';
+}
+
+function buildRetestDetail(title: string, question: string): string {
+  const trimmedQuestion = question.trim();
+  if (title === '模块接口与数据流复测') {
+    return trimmedQuestion
+      ? `下轮重点追问模块之间怎么对接。可以从这类问题开始：“${trimmedQuestion}”。通过标准是你能说清输入、输出、传递格式、接口位置，以及你的模块和后续模块如何衔接。`
+      : '下轮重点追问模块之间怎么对接，确认你能说清输入、输出、传递格式、接口位置，以及模块之间如何衔接。';
+  }
+  if (title === '实验验证与量化指标复测') {
+    return trimmedQuestion
+      ? `下轮重点验证你是否补上了结果可信性的证据。可以从这类问题开始：“${trimmedQuestion}”。通过标准是你能说出至少 2 个量化指标或明确的验证方式，并解释这些证据为什么能支持结论。`
+      : '下轮重点验证你是否补上了结果可信性的证据。通过标准是你能说出至少 2 个量化指标或明确的验证方式，并解释这些证据为什么能支持结论。';
+  }
+  if (title === '方案选型与设计权衡复测') {
+    return trimmedQuestion
+      ? `下轮重点验证你是否真正理解为什么这样设计。可以从这类问题开始：“${trimmedQuestion}”。通过标准是你能说清选择理由、替代方案，以及这种方案在当前场景下的边界和代价。`
+      : '下轮重点验证你是否真正理解为什么这样设计。通过标准是你能说清选择理由、替代方案，以及这种方案在当前场景下的边界和代价。';
+  }
+  if (title === '个人贡献边界复测') {
+    return trimmedQuestion
+      ? `下轮重点核验你的个人贡献是否清楚。可以从这类问题开始：“${trimmedQuestion}”。通过标准是你能明确区分自己负责的部分、和同学或系统其他模块的分工，以及你亲自解决过的关键问题。`
+      : '下轮重点核验你的个人贡献是否清楚。通过标准是你能明确区分自己负责的部分、和同学或系统其他模块的分工，以及你亲自解决过的关键问题。';
+  }
+  if (title === '项目真实性与技术链路复测') {
+    return trimmedQuestion
+      ? `下轮重点核验你能否把项目讲完整。可以从这类问题开始：“${trimmedQuestion}”。通过标准是你能说清核心方案、关键输入输出、实现链路，以及这部分工作和整体项目目标的关系。`
+      : '下轮重点核验你能否把项目讲完整。通过标准是你能说清核心方案、关键输入输出、实现链路，以及这部分工作和整体项目目标的关系。';
+  }
+  return trimmedQuestion
+    ? `下轮继续围绕这类问题复测：“${trimmedQuestion}”。通过标准是你能补齐关键论证、实现细节和回答结构，而不是只给出泛泛描述。`
+    : '下轮继续围绕本轮低分点复测，确认你能补齐关键论证、实现细节和回答结构，而不是只给出泛泛描述。';
+}
+
+function mergeRetestFocusByTitle(items: RetestFocus[]): RetestFocus[] {
+  const merged = new Map<string, RetestFocus>();
+  for (const item of items) {
+    const existing = merged.get(item.title);
+    if (!existing) {
+      merged.set(item.title, item);
+      continue;
+    }
+    if (existing.priority !== 'high' && item.priority === 'high') {
+      merged.set(item.title, item);
+    }
+  }
+  return Array.from(merged.values());
+}
+
+function containsAny(text: string, keywords: string[]): boolean {
+  return keywords.some(keyword => text.includes(keyword));
 }
 
 function createDiagnosisDimension(name: string, score: number, count: number): DiagnosisDimension {

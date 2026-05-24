@@ -103,6 +103,11 @@
 - `overallFeedback` 应具有"诊断报告"风格，而不是泛泛总结
 - strengths 输出 3-6 条，避免重复堆砌
 - improvements 输出 2-3 个最关键的学习任务，每个必须包含完整的：任务名称 / 为什么要做 / 具体步骤 / 交付物 / 完成标准
+- `nextRoundFocus` 必须输出 2-3 条结构化复测重点；每条包含：title、question、passCriteria、priority
+- `nextRoundFocus.title` 必须是自然语言能力主题，例如“项目真实性核验”“模块接口理解”“实验验证与量化指标”；禁止系统标签、题号和追问编号
+- `nextRoundFocus.question` 必须是下一轮面试官真的会问的一道具体问题
+- `nextRoundFocus.passCriteria` 必须是用户侧可观察的通过标准，禁止写成分数提升目标
+- `nextRoundFocus.priority` 只能是 `high` 或 `medium`
 - strengths 应总结已形成的能力优势，不要写成建议
 - 若输入显示短板分布明显不均衡，必须体现优先级排序，不要平均用力
 - 结论必须具体，避免"建议加强基础""还需提升表达"这类空话

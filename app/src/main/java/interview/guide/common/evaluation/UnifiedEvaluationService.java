@@ -70,7 +70,15 @@ public class UnifiedEvaluationService {
     private record SummaryDTO(
         String overallFeedback,
         List<String> strengths,
-        List<String> improvements
+        List<String> improvements,
+        List<RetestFocusItemDTO> nextRoundFocus
+    ) {}
+
+    private record RetestFocusItemDTO(
+        String title,
+        String question,
+        String passCriteria,
+        String priority
     ) {}
 
     public UnifiedEvaluationService(
@@ -140,7 +148,7 @@ public class UnifiedEvaluationService {
         );
 
         return buildReport(sessionId, qaRecords, mergedEvaluations,
-            summary.overallFeedback(), summary.strengths(), summary.improvements());
+            summary.overallFeedback(), summary.strengths(), summary.improvements(), summary.nextRoundFocus());
     }
 
     private String loadPrompt(String path) throws IOException {
@@ -272,10 +280,11 @@ public class UnifiedEvaluationService {
                 ? dto.overallFeedback() : fallbackFeedback;
             List<String> strengths = sanitizeItems(dto != null ? dto.strengths() : null, fallbackStrengths);
             List<String> improvements = sanitizeItems(dto != null ? dto.improvements() : null, fallbackImprovements);
-            return new SummaryDTO(feedback, strengths, improvements);
+            List<RetestFocusItemDTO> nextRoundFocus = sanitizeRetestFocus(dto != null ? dto.nextRoundFocus() : null);
+            return new SummaryDTO(feedback, strengths, improvements, nextRoundFocus);
         } catch (Exception e) {
             log.warn("二次汇总评估失败，降级到批次聚合结果: sessionId={}, error={}", sessionId, e.getMessage());
-            return new SummaryDTO(fallbackFeedback, fallbackStrengths, fallbackImprovements);
+            return new SummaryDTO(fallbackFeedback, fallbackStrengths, fallbackImprovements, List.of());
         }
     }
 
@@ -290,7 +299,9 @@ public class UnifiedEvaluationService {
     private EvaluationReport buildReport(String sessionId, List<QaRecord> qaRecords,
                                           List<QuestionEvalDTO> evaluations,
                                           String overallFeedback,
-                                          List<String> strengths, List<String> improvements) {
+                                          List<String> strengths,
+                                          List<String> improvements,
+                                          List<RetestFocusItemDTO> nextRoundFocus) {
         List<QuestionEvaluation> questionDetails = new ArrayList<>();
         List<ReferenceAnswer> referenceAnswers = new ArrayList<>();
         Map<String, List<Integer>> categoryScoresMap = new HashMap<>();

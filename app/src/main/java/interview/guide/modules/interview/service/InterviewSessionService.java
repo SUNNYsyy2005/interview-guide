@@ -518,6 +518,25 @@ public class InterviewSessionService {
     }
 
     /**
+     * 重新评估（手动重试）
+     * 重置评估状态并重新发送评估任务
+     */
+    public void reEvaluate(String sessionId) {
+        // 校验会话存在
+        persistenceService.findBySessionId(sessionId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        // 重置评估状态
+        persistenceService.updateEvaluateStatus(sessionId, AsyncTaskStatus.PENDING, null);
+        persistenceService.updateSessionStatus(sessionId,
+            InterviewSessionEntity.SessionStatus.COMPLETED);
+
+        // 重新发送评估任务
+        evaluateStreamProducer.sendEvaluateTask(sessionId);
+        log.info("重新评估任务已入队: sessionId={}", sessionId);
+    }
+
+    /**
      * 获取或恢复会话（优先从缓存获取）
      */
     private CachedSession getOrRestoreSession(String sessionId) {
