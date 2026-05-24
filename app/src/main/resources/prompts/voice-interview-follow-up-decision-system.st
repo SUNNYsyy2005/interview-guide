@@ -46,12 +46,9 @@
 # Output Contract
 只输出严格 JSON，不要输出 Markdown，不要输出解释。
 
-允许的 JSON 只有两种：
-1. 继续追问：
-{"decision":"FOLLOW_UP","question":"<一个简短追问>"}
-
-2. 进入下一道主问题：
-{"decision":"NEXT_MAIN"}
+输出只能是两种对象之一：
+1. `decision` 为 `FOLLOW_UP`，并带一个非空的 `question` 字段；
+2. `decision` 为 `NEXT_MAIN`，且不带 `question` 字段。
 
 # Hard Constraints
 - `decision` 的取值只能是 `FOLLOW_UP` 或 `NEXT_MAIN`

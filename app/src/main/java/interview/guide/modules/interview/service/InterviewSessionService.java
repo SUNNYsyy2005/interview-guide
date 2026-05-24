@@ -199,13 +199,15 @@ public class InterviewSessionService {
                 new TypeReference<>() {}
             );
 
-            // 恢复已保存的答案
+            // 恢复已保存的答案（按 questionIndex identity 匹配，而不是数组位置）
             List<InterviewAnswerEntity> answers = persistenceService.findAnswersBySessionId(entity.getSessionId());
             for (InterviewAnswerEntity answer : answers) {
-                int index = answer.getQuestionIndex();
-                if (index >= 0 && index < questions.size()) {
-                    InterviewQuestionDTO question = questions.get(index);
-                    questions.set(index, question.withAnswer(answer.getUserAnswer()));
+                for (int i = 0; i < questions.size(); i++) {
+                    InterviewQuestionDTO question = questions.get(i);
+                    if (question.questionIndex() == answer.getQuestionIndex()) {
+                        questions.set(i, question.withAnswer(answer.getUserAnswer()));
+                        break;
+                    }
                 }
             }
 
@@ -422,9 +424,15 @@ public class InterviewSessionService {
         CachedSession session = getOrRestoreSession(request.sessionId());
         List<InterviewQuestionDTO> questions = session.getQuestions(objectMapper);
 
-        int index = request.questionIndex();
-        if (index < 0 || index >= questions.size()) {
-            throw new BusinessException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND, "无效的问题索引: " + index);
+        int index = -1;
+        for (int i = 0; i < questions.size(); i++) {
+            if (questions.get(i).questionIndex() == request.questionIndex()) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) {
+            throw new BusinessException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND, "无效的问题索引: " + request.questionIndex());
         }
 
         // 更新问题答案

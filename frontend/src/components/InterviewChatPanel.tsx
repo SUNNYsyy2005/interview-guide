@@ -61,9 +61,15 @@ export default function InterviewChatPanel({
 
   const currentMainDisplayOrder = useMemo(() => {
     const currentIndex = currentDisplayOrder;
-    const matchedIndex = mainQuestionIndexes.findIndex((index) => index >= currentIndex);
-    if (matchedIndex >= 0) return matchedIndex;
-    return Math.max(mainQuestionIndexes.length - 1, 0);
+    let matchedIndex = 0;
+    for (let i = 0; i < mainQuestionIndexes.length; i++) {
+      if (mainQuestionIndexes[i] <= currentIndex) {
+        matchedIndex = i;
+      } else {
+        break;
+      }
+    }
+    return matchedIndex;
   }, [currentDisplayOrder, mainQuestionIndexes]);
 
   const progress = useMemo(() => {

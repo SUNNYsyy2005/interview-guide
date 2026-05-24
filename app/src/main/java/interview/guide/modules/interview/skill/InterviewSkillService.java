@@ -158,6 +158,19 @@ public class InterviewSkillService {
     }
 
     public SkillDTO getSkill(String skillId) {
+        if ("baoyan-prescreen".equals(skillId) && defaultPersona != null) {
+            return new SkillDTO(
+                "baoyan-prescreen",
+                "保研预推免 AI 面试诊断与学习规划 Agent",
+                "围绕简历、项目经历、科研经历进行连续追问，识别短板并生成学习计划与复测重点。",
+                List.of(),
+                true,
+                null,
+                defaultPersona,
+                null
+            );
+        }
+
         InterviewSkillProperties.SkillDefinition preset = presetRegistry.get(skillId);
         if (preset != null) {
             return toSkillDTO(skillId, preset);
