@@ -289,6 +289,38 @@ public class UnifiedEvaluationService {
         }
     }
 
+    /**
+     * 将 List<Object> 转为 List<String>。
+     * AI 返回的 improvements 可能是 String 或 Map（结构化对象），需要统一转为字符串。
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> convertToStringList(List<?> items) {
+        if (items == null || items.isEmpty()) return List.of();
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        return items.stream().map(item -> {
+            if (item instanceof String s) {
+                return s;
+            } else if (item instanceof Map<?, ?> map) {
+                // 结构化对象：按字段拼接为可读文本
+                StringBuilder sb = new StringBuilder();
+                if (map.containsKey("taskName")) sb.append("【").append(map.get("taskName")).append("】\n");
+                if (map.containsKey("why")) sb.append("为什么要补：").append(map.get("why")).append("\n");
+                if (map.containsKey("steps") && map.get("steps") instanceof List<?> steps) {
+                    sb.append("具体步骤：\n");
+                    for (int i = 0; i < steps.size(); i++) {
+                        sb.append(i + 1).append(". ").append(steps.get(i)).append("\n");
+                    }
+                }
+                if (map.containsKey("交付物")) sb.append("交付物：").append(map.get("交付物")).append("\n");
+                if (map.containsKey("完成标准")) sb.append("完成标准：").append(map.get("完成标准"));
+                String result = sb.toString().trim();
+                return result.isEmpty() ? item.toString() : result;
+            } else {
+                return item.toString();
+            }
+        }).filter(s -> s != null && !s.isBlank()).toList();
+    }
+
     private List<String> sanitizeItems(List<String> primary, List<String> fallback) {
         List<String> source = (primary != null && !primary.isEmpty()) ? primary : fallback;
         if (source == null || source.isEmpty()) return List.of();

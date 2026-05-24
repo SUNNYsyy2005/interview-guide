@@ -117,6 +117,9 @@ public class StructuredOutputInvoker {
         // 1.5 去除重复 JSON key（AI 有时返回多个同名字段）
         cleaned = deduplicateJsonKeys(cleaned);
 
+        // 1.6 将 JSON 数组中的对象值转为字符串（AI 有时返回结构化对象而非字符串）
+        cleaned = flattenArrayObjectsToStrings(cleaned);
+
         // 2. 直接尝试解析
         try {
             return outputConverter.convert(cleaned);
@@ -173,59 +176,105 @@ public class StructuredOutputInvoker {
      */
     private String deduplicateJsonKeys(String json) {
         if (json == null || json.isBlank()) return json;
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper =
-                new com.fasterxml.jackson.databind.ObjectMapper();
-            // 用 readTree 解析，duplicate key 时 Jackson 默认保留最后一个
-            // 然后把所有顶层和嵌套对象中的 List 值展平
-            com.fasterxml.jackson.databind.JsonNode tree = mapper.readTree(json);
-
-            // 如果解析成功且没有重复 key，直接返回
-            // Jackson readTree 会静默取最后一个值，所以这里只是兜底
-            // 真正的重复 key 修复靠下面的字符串级处理
-            String serialized = mapper.writeValueAsString(tree);
-
-            // 如果序列化后和原文一样，说明没有重复 key
-            if (serialized.replace(" ", "").equals(json.replace(" ", ""))) {
-                return json;
-            }
-            return serialized;
-        } catch (Exception e) {
-            // JSON 语法有问题，尝试字符串级去重
-            return deduplicateJsonKeysByString(json);
+        if (!hasDuplicateKeys(json)) {
+            return json;  // 没有重复 key，原样返回
         }
-    }
-
-    /**
-     * 字符串级 JSON 重复 key 去重。
-     * 找到重复的 key，将后面的值合并到第一个出现的位置（合并为数组）。
-     */
-    private String deduplicateJsonKeysByString(String json) {
         try {
+            // 有重复 key，用 readTree 只保留最后一个值（比解析失败好）
             com.fasterxml.jackson.databind.ObjectMapper mapper =
                 new com.fasterxml.jackson.databind.ObjectMapper();
-            com.fasterxml.jackson.core.JsonParser parser = mapper.getFactory().createParser(json);
-
-            // 收集所有 key 的位置和值
-            record KeyEntry(String key, int start, int valueStart, int valueEnd, String rawValue) {}
-            java.util.List<KeyEntry> entries = new java.util.ArrayList<>();
-            java.util.Map<String, java.util.List<KeyEntry>> keyGroups = new java.util.LinkedHashMap<>();
-
-            // 简化方案：直接用 ObjectMapper 的 readValue + 自定义反序列化
-            // 实际上，最可靠的方案是用 Gson，它天然支持重复 key
-            // 但项目里没有 Gson，所以用一个更简单的策略
-
-            // 策略：逐字符扫描，找到重复 key，把后面的值拼到第一个 value 后面
-            // 这太复杂了，换一个更实用的方案：
-            // 用 Jackson 的 ENABLE_STREAM_READING feature 配合自定义处理
-
-            // 最终方案：用 Jackson readTree，接受只保留最后一个值
-            // 这比解析失败要好
             com.fasterxml.jackson.databind.JsonNode tree = mapper.readTree(json);
             return mapper.writeValueAsString(tree);
         } catch (Exception e) {
             return json;
         }
+    }
+
+    /**
+     * 快速检测 JSON 字符串中是否有重复 key
+     */
+    private boolean hasDuplicateKeys(String json) {
+        try {
+            // 用 Jackson 的 STRICT_DUPLICATE_DETECTION 检测
+            com.fasterxml.jackson.core.JsonFactory factory = new com.fasterxml.jackson.core.JsonFactory();
+            factory.configure(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION, true);
+            com.fasterxml.jackson.core.JsonParser parser = factory.createParser(json);
+            while (parser.nextToken() != null) {
+                // 遍历所有 token，如果遇到重复 key 会抛 JsonParseException
+            }
+            parser.close();
+            return false;
+        } catch (com.fasterxml.jackson.core.JsonParseException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Duplicate")) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 将 JSON 数组中的对象值转为字符串。
+     * AI 有时按 prompt 要求返回结构化对象（如 {"taskName":"...", "why":"..."}），
+     * 但 DTO 定义为 List&lt;String&gt;，导致 Jackson 反序列化失败。
+     * 此方法遍历 JSON 树，将包含对象的数组中的对象序列化为 JSON 字符串。
+     */
+    private String flattenArrayObjectsToStrings(String json) {
+        if (json == null || json.isBlank()) return json;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode tree = mapper.readTree(json);
+            boolean modified = flattenNode(tree, mapper);
+            return modified ? mapper.writeValueAsString(tree) : json;
+        } catch (Exception e) {
+            return json;
+        }
+    }
+
+    /**
+     * 递归遍历 JSON 树，将包含对象元素的数组中的对象转为 JSON 字符串。
+     * 只处理混合了对象和字符串的数组，纯字符串数组不动。
+     */
+    private boolean flattenNode(com.fasterxml.jackson.databind.JsonNode node,
+                                com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        if (node.isObject()) {
+            boolean modified = false;
+            var fields = node.fields();
+            while (fields.hasNext()) {
+                var entry = fields.next();
+                if (flattenNode(entry.getValue(), mapper)) {
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+        if (node.isArray()) {
+            boolean hasObject = false;
+            boolean hasString = false;
+            for (var child : node) {
+                if (child.isObject()) hasObject = true;
+                if (child.isTextual()) hasString = true;
+            }
+            // 如果数组中混有对象和字符串，或者全是对象，把对象转为字符串
+            if (hasObject) {
+                var array = (com.fasterxml.jackson.databind.node.ArrayNode) node;
+                for (int i = 0; i < array.size(); i++) {
+                    var child = array.get(i);
+                    if (child.isObject()) {
+                        try {
+                            String str = mapper.writeValueAsString(child);
+                            array.set(i, mapper.getNodeFactory().textNode(str));
+                        } catch (Exception ignored) {}
+                    }
+                }
+                return true;
+            }
+            // 纯字符串数组，递归检查子节点（虽然字符串没有子节点）
+            return false;
+        }
+        return false;
     }
 
     private String repairUnescapedQuotesInJsonStrings(String content) {
