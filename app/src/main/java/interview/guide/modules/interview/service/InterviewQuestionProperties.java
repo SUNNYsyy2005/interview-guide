@@ -14,4 +14,6 @@ public class InterviewQuestionProperties {
     private String questionUserPromptPath = "classpath:prompts/interview-question-skill-user.st";
     private String resumeQuestionSystemPromptPath = "classpath:prompts/interview-question-resume-system.st";
     private String resumeQuestionUserPromptPath = "classpath:prompts/interview-question-resume-user.st";
+    private String followUpDecisionSystemPromptPath = "classpath:prompts/voice-interview-follow-up-decision-system.st";
+    private String followUpDecisionUserPromptPath = "classpath:prompts/voice-interview-follow-up-decision-user.st";
 }

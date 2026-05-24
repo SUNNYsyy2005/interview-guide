@@ -11,6 +11,20 @@ import { getSkillIcon } from '../utils/skillIcons';
 export type { InterviewMode, Difficulty };
 export { DIFFICULTY_OPTIONS };
 
+const SAMPLE_AIIC_TEXT = `【北大AIIC学硕推免】如果你未来想做AI创业，或成为AI企业的核心骨干，北大AIIC学硕是最适合你的硕士项目
+
+如果你未来想做AI创业，或者想进入AI企业，快速成长，AIIC的学术硕士项目，是最适合你的选择。
+
+AIIC由百度创始七剑客、酷我音乐创始人雷鸣联合北京大学计算机学院共同创建。中心参考斯坦福等大学的创新人才培养项目，结合了大量优质产业资源，致力于培养兼具AI学术能力与创业创新能力的复合型人才。
+
+AIIC的资源网络覆盖：上市科技企业创始人、CEO，顶级VC管理合伙人，AI企业核心技术与产品负责人，具有丰富经验的产业导师与创业者。
+
+在学术上，AIIC共享AI相关专业博士同样的课程与教学条件，接受专门博士生导师的学术指导。在创新创业上，AIIC设计了完整的内部课程体系，包括：创业通识、需求分析、产品设计、深度思考、个人效率、AI增效。
+
+招生要求：理工科大三学生，已获得保送研究生资格，学习成绩优秀，逻辑能力强，对AI、创新、创业有兴趣。
+
+简历发送邮箱：mlic@pku.edu.cn`;
+
 export interface UnifiedInterviewConfig {
   mode: InterviewMode;
   skillId: string;
@@ -279,22 +293,33 @@ export default function UnifiedInterviewModal({
                           value={config.customJdText}
                           onChange={e => config.setCustomJdText(e.target.value)}
                           placeholder="粘贴目标实验室/项目的推文、招生简介或研究方向描述（至少 50 字）..."
-                          rows={4}
+                          rows={5}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700
                             bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white
                             placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2
                             focus:ring-primary-500/50 focus:border-primary-400 transition-shadow"
                         />
-                        <button
-                          onClick={config.handleParseJd}
-                          disabled={config.parsingJd || !config.customJdText}
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
-                            bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50
-                            disabled:cursor-not-allowed transition-colors"
-                        >
-                          {config.parsingJd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                          解析面试方向
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={config.handleParseJd}
+                            disabled={config.parsingJd || !config.customJdText}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
+                              bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50
+                              disabled:cursor-not-allowed transition-colors"
+                          >
+                            {config.parsingJd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                            解析面试方向
+                          </button>
+                          <button
+                            onClick={() => config.setCustomJdText(SAMPLE_AIIC_TEXT)}
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg
+                              border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300
+                              hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            填入示例（北大 AIIC 推文）
+                          </button>
+                        </div>
                         {config.customCategories.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {config.customCategories.map((cat, i) => (
