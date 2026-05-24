@@ -102,7 +102,7 @@ public class ResumeGradingService {
             // 调用AI
             ResumeAnalysisResponseDTO dto;
             try {
-                ChatClient chatClient = llmProviderRegistry.getDefaultChatClient();
+                ChatClient chatClient = llmProviderRegistry.getPlainChatClient(null);
                 dto = structuredOutputInvoker.invoke(
                     chatClient,
                     systemPromptWithFormat,
