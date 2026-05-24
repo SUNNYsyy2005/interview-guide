@@ -7,9 +7,9 @@ export type InterviewMode = 'text' | 'voice';
 export type Difficulty = 'junior' | 'mid' | 'senior';
 
 export const DIFFICULTY_OPTIONS: { value: Difficulty; label: string; desc: string }[] = [
-  { value: 'junior', label: '校招', desc: '0-1 年' },
-  { value: 'mid', label: '中级', desc: '1-3 年' },
-  { value: 'senior', label: '高级', desc: '3 年+' },
+  { value: 'junior', label: '基础', desc: '核心概念' },
+  { value: 'mid', label: '进阶', desc: '原理与实战' },
+  { value: 'senior', label: '深入', desc: '架构与调优' },
 ];
 
 export const CUSTOM_SKILL_ID = 'custom';
@@ -90,7 +90,7 @@ export function useInterviewConfig(options?: {
 
   const handleParseJd = async () => {
     if (!customJdText || customJdText.length < MIN_JD_LENGTH) {
-      alert(`JD 内容太少（至少 ${MIN_JD_LENGTH} 字），请补充后重试`);
+      alert(`内容太少（至少 ${MIN_JD_LENGTH} 字），请补充后重试`);
       return;
     }
     setParsingJd(true);
@@ -99,7 +99,7 @@ export function useInterviewConfig(options?: {
       setCustomCategories(categories);
       setParsedCustomJdText(customJdText);
     } catch {
-      alert('JD 解析失败，请重试或选择预设主题');
+      alert('解析失败，请重试或选择预设主题');
     } finally {
       setParsingJd(false);
     }

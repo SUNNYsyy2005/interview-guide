@@ -83,7 +83,7 @@ export default function Layout() {
   const navGroups: NavGroup[] = [
     {
       id: 'interview',
-      title: '面试准备',
+      title: '保研面试准备',
       items: [
         { id: 'resumes', path: '/history', label: '简历管理', icon: FileStack, description: '管理简历，AI 分析' },
         { id: 'interview-hub', path: '/interview-hub', label: '模拟面试', icon: Sparkles, description: '文字/语音面试练习' },
@@ -131,8 +131,8 @@ export default function Layout() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight block">保研预推免</span>
-              <span className="text-xs text-slate-400 dark:text-slate-500">AI 学长陪练</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight block">保研面试诊断</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">学习规划 Agent</span>
             </div>
           </Link>
         </div>
@@ -212,8 +212,8 @@ export default function Layout() {
         {/* 底部信息 */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-700">
           <div className="px-3 py-2 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/30 dark:to-slate-800 rounded-xl">
-            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">保研预推免陪练 v1.0</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">AI 学长陪练</p>
+            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">保研面试诊断 v1.0</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">学习规划 Agent</p>
           </div>
         </div>
       </aside>

@@ -257,7 +257,7 @@ export default function UnifiedInterviewModal({
                         </div>
                         <div className="flex-1 min-w-0">
                           <span className={`text-xs font-medium block ${config.isCustomSkill ? 'text-primary-700 dark:text-primary-300' : 'text-slate-500 dark:text-slate-400'}`}>
-                            自定义 JD
+                            自定义推文/方向
                           </span>
                         </div>
                       </button>
@@ -278,7 +278,7 @@ export default function UnifiedInterviewModal({
                         <textarea
                           value={config.customJdText}
                           onChange={e => config.setCustomJdText(e.target.value)}
-                          placeholder="粘贴目标岗位的职位描述（JD），至少 50 字..."
+                          placeholder="粘贴目标实验室/项目的推文、招生简介或研究方向描述（至少 50 字）..."
                           rows={4}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700
                             bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white
@@ -310,7 +310,7 @@ export default function UnifiedInterviewModal({
                         )}
                         {config.jdNeedsReparse && (
                           <p className="text-xs text-amber-600 dark:text-amber-400">
-                            JD 已修改，请重新解析后再开始面试。
+                            内容已修改，请重新解析后再开始面试。
                           </p>
                         )}
                       </div>

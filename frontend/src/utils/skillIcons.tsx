@@ -1,34 +1,28 @@
 import type { IconType } from 'react-icons';
 import {
-  SiOpenjdk,
-  SiReact,
-  SiPython,
-  SiBytedance,
-  SiAlibabadotcom,
-} from 'react-icons/si';
-import {
-  TbMathFunction,
-  TbTopologyStarRing3,
   TbSparkles,
-  TbTestPipe,
-  TbRobot,
+  TbBrain,
 } from 'react-icons/tb';
+import {
+  HiOutlineComputerDesktop,
+  HiOutlineEye,
+  HiOutlineChatBubbleLeftRight,
+  HiOutlineRocketLaunch,
+} from 'react-icons/hi2';
+import { GiRobotGrab } from 'react-icons/gi';
 
 /**
  * Skill ID → react-icons 图标映射
- * 优先使用品牌图标（Si*），通用类使用 Tabler Icons（Tb*）
+ * 保研面试研究方向
  * 未命中的 skill 使用后端返回的 emoji 作为兜底
  */
 const SKILL_ICON_MAP: Record<string, IconType> = {
-  'java-backend': SiOpenjdk,
-  'frontend': SiReact,
-  'python-backend': SiPython,
-  'bytedance-backend': SiBytedance,
-  'ali-backend': SiAlibabadotcom,
-  'algorithm': TbMathFunction,
-  'system-design': TbTopologyStarRing3,
-  'test-development': TbTestPipe,
-  'ai-agent-dev': TbRobot,
+  'ml-deep-learning': TbBrain,                           // 机器学习与深度学习
+  'llm-ai-app': HiOutlineChatBubbleLeftRight,            // 大语言模型与AI应用
+  'cv-multimodal': HiOutlineEye,                         // 计算机视觉与多模态
+  'systems-engineering': HiOutlineComputerDesktop,       // 计算机系统与工程
+  'robotics-embodied': GiRobotGrab,                      // 机器人与具身智能
+  'ai-application': HiOutlineRocketLaunch,               // AI 应用与创业
   'custom': TbSparkles,
 };
 

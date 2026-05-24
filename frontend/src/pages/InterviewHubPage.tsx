@@ -20,6 +20,19 @@ import {
 } from '../hooks/useInterviewConfig';
 
 // 统一的面试记录项
+const SAMPLE_AIIC_TEXT = `【北大AIIC学硕推免】如果你未来想做AI创业，或成为AI企业的核心骨干，北大AIIC学硕是最适合你的硕士项目
+
+如果你未来想做AI创业，或者想进入AI企业，快速成长，AIIC的学术硕士项目，是最适合你的选择。
+
+AIIC由百度创始七剑客、酷我音乐创始人雷鸣联合北京大学计算机学院共同创建。中心参考斯坦福等大学的创新人才培养项目，结合了大量优质产业资源，致力于培养兼具AI学术能力与创业创新能力的复合型人才。
+
+AIIC的资源网络覆盖：上市科技企业创始人、CEO，顶级VC管理合伙人，AI企业核心技术与产品负责人，具有丰富经验的产业导师与创业者。
+
+在学术上，AIIC共享AI相关专业博士同样的课程与教学条件，接受专门博士生导师的学术指导。在创新创业上，AIIC设计了完整的内部课程体系，包括：创业通识、需求分析、产品设计、深度思考、个人效率、AI增效。
+
+招生要求：理工科大三学生，已获得保送研究生资格，学习成绩优秀，逻辑能力强，对AI、创新、创业有兴趣。
+
+简历发送邮箱：mlic@pku.edu.cn`;
 interface RecentInterviewItem {
   id: string;
   type: 'text' | 'voice';
@@ -36,7 +49,7 @@ export default function InterviewHubPage() {
 
   const config = useInterviewConfig({ autoLoad: false });
 
-  // === 最近陪练记录 ===
+  // === 最近诊断记录 ===
   const [recentInterviews, setRecentInterviews] = useState<RecentInterviewItem[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(false);
 
@@ -136,9 +149,9 @@ export default function InterviewHubPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
           <Sparkles className="w-7 h-7 text-primary-500" />
-          保研预推免 AI 学长陪练
+          AI 保研面试诊断 Agent
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">像资深学长一样连续追问，像面试教练一样给出可执行反馈</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">像面试官一样诊断表现，像导师一样给出可执行规划</p>
       </div>
 
       {/* 配置区域 */}
@@ -153,9 +166,9 @@ export default function InterviewHubPage() {
               {([
                 {
                   value: 'text' as InterviewMode,
-                  label: 'AI 学长陪练',
+                  label: 'AI 面试诊断',
                   icon: FileText,
-                  desc: '连续追问 + 针对性反馈，模拟真实保研面试',
+                  desc: '连续追问 + 针对性反馈，生成你的诊断结论与学习规划',
                   recommended: true,
                 },
               ]).map(opt => {
@@ -192,7 +205,7 @@ export default function InterviewHubPage() {
           {/* 训练方向 */}
           <div>
             <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              训练方向
+              面试方向
             </label>
             {config.loadingSkills ? (
               <div className="flex items-center gap-2 py-4 text-slate-400">
@@ -251,7 +264,7 @@ export default function InterviewHubPage() {
                     })()}
                   </div>
                   <span className={`text-xs font-medium ${config.isCustomSkill ? 'text-primary-700 dark:text-primary-300' : 'text-slate-500 dark:text-slate-400'}`}>
-                    自定义 JD
+                    自定义推文/方向
                   </span>
                 </button>
               </div>
@@ -271,23 +284,34 @@ export default function InterviewHubPage() {
                   <textarea
                     value={config.customJdText}
                     onChange={e => config.setCustomJdText(e.target.value)}
-                    placeholder="粘贴目标岗位的职位描述（JD），至少 50 字..."
-                    rows={4}
+                    placeholder="粘贴目标实验室/项目的推文、招生简介或研究方向描述（至少 50 字）..."
+                    rows={5}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700
                       bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white
                       placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2
                       focus:ring-primary-500/50 focus:border-primary-400 transition-shadow"
                   />
-                  <button
-                    onClick={config.handleParseJd}
-                    disabled={config.parsingJd || !config.customJdText}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
-                      bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50
-                      disabled:cursor-not-allowed transition-colors"
-                  >
-                    {config.parsingJd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    解析训练方向
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={config.handleParseJd}
+                      disabled={config.parsingJd || !config.customJdText}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
+                        bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50
+                        disabled:cursor-not-allowed transition-colors"
+                    >
+                      {config.parsingJd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      解析面试方向
+                    </button>
+                    <button
+                      onClick={() => config.setCustomJdText(SAMPLE_AIIC_TEXT)}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg
+                        border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300
+                        hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      填入示例（北大 AIIC 推文）
+                    </button>
+                  </div>
                   {config.customCategories.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {config.customCategories.map((cat, i) => (
@@ -303,7 +327,7 @@ export default function InterviewHubPage() {
                   )}
                   {config.jdNeedsReparse && (
                     <p className="text-xs text-amber-600 dark:text-amber-400">
-                      JD 已修改，请重新解析后再开始面试。
+                      内容已修改，请重新解析后再开始面试。
                     </p>
                   )}
                 </div>
@@ -444,15 +468,15 @@ export default function InterviewHubPage() {
               bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700
               text-white shadow-lg shadow-primary-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            开始 AI 学长陪练
+            开始保研面试诊断
           </motion.button>
         </div>
       </div>
 
-      {/* 最近陪练记录 */}
+      {/* 最近诊断记录 */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white">最近陪练记录</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white">最近诊断记录</h2>
           <Link
             to="/interviews"
             className="text-sm text-primary-500 hover:text-primary-600 font-medium transition-colors"
