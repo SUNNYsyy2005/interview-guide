@@ -228,9 +228,12 @@ export const voiceInterviewApi = {
     if (userId) params.append('userId', userId);
     if (status) params.append('status', status);
 
-    return request.get<SessionMeta[]>(
-      `/api/voice-interview/sessions?${params.toString()}`
-    );
+    const queryString = params.toString();
+    const url = queryString
+      ? `/api/voice-interview/sessions?${queryString}`
+      : '/api/voice-interview/sessions';
+
+    return request.get<SessionMeta[]>(url);
   },
 
   /**
