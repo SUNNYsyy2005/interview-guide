@@ -186,6 +186,16 @@ public class InterviewController {
     }
 
     /**
+     * 取消评估（重置为未评估状态）
+     */
+    @PostMapping("/api/interview/sessions/{sessionId}/cancel-evaluation")
+    public Result<Void> cancelEvaluation(@PathVariable String sessionId) {
+        log.info("取消评估: {}", sessionId);
+        sessionService.cancelEvaluation(sessionId);
+        return Result.success(null);
+    }
+
+    /**
      * 删除面试会话
      */
     @DeleteMapping("/api/interview/sessions/{sessionId}")

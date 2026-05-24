@@ -24,6 +24,7 @@ import {
   Search,
   Trash2,
   TrendingUp,
+  X,
   Users,
 } from 'lucide-react';
 
@@ -360,12 +361,21 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
     setReEvaluatingId(sessionId);
     try {
       await interviewApi.reEvaluate(sessionId);
-      // 刷新列表以显示最新状态
       await loadAll();
     } catch {
       alert('重新评估失败，请重试');
     } finally {
       setReEvaluatingId(null);
+    }
+  };
+
+  const handleCancelEvaluation = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await interviewApi.cancelEvaluation(sessionId);
+      await loadAll();
+    } catch {
+      alert('取消评估失败，请重试');
     }
   };
 
@@ -592,6 +602,15 @@ export default function InterviewHistoryPage({ onBack: _onBack, onViewInterview,
                             ) : (
                               <RefreshCw className="w-4 h-4" />
                             )}
+                          </button>
+                        )}
+                        {isEvaluating(item) && (
+                          <button
+                            onClick={(e) => handleCancelEvaluation(item.sessionId, e)}
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                            title="取消评估"
+                          >
+                            <X className="w-4 h-4" />
                           </button>
                         )}
                         <button

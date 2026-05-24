@@ -537,6 +537,17 @@ public class InterviewSessionService {
     }
 
     /**
+     * 取消评估（重置为未评估状态）
+     */
+    public void cancelEvaluation(String sessionId) {
+        persistenceService.findBySessionId(sessionId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        persistenceService.updateEvaluateStatus(sessionId, null, null);
+        log.info("评估已取消: sessionId={}", sessionId);
+    }
+
+    /**
      * 获取或恢复会话（优先从缓存获取）
      */
     private CachedSession getOrRestoreSession(String sessionId) {

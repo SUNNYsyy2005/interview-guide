@@ -110,4 +110,8 @@ export const interviewApi = {
   async reEvaluate(sessionId: string): Promise<void> {
     return request.post<void>(`/api/interview/sessions/${sessionId}/re-evaluate`);
   },
+
+  async cancelEvaluation(sessionId: string): Promise<void> {
+    return request.post<void>(`/api/interview/sessions/${sessionId}/cancel-evaluation`);
+  },
 };
